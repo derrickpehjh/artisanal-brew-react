@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
@@ -60,13 +60,29 @@ function RecipeCard({ recipe, idx, canReplicate, onUse }) {
   )
 }
 
+function matchesSearch(recipe, q) {
+  if (!q) return true
+  const lower = q.toLowerCase()
+  return (
+    recipe.beanName?.toLowerCase().includes(lower) ||
+    recipe.method?.toLowerCase().includes(lower) ||
+    (recipe.tasteTags || []).some(t => t.toLowerCase().includes(lower))
+  )
+}
+
 export default function Recipes() {
   const { brews, beans, setPendingBrew, setActiveBeanId, getActiveBean } = useApp()
   const navigate = useNavigate()
+  const [search, setSearch] = useState('')
 
   const bestBrews = useMemo(() => {
-    return [...brews].sort((a,b) => b.rating - a.rating || new Date(b.date)-new Date(a.date)).slice(0, 3)
-  }, [brews])
+    const top = [...brews].sort((a,b) => b.rating - a.rating || new Date(b.date)-new Date(a.date)).slice(0, 6)
+    return top.filter(r => matchesSearch(r, search))
+  }, [brews, search])
+
+  const communityRecipes = useMemo(() => {
+    return COMMUNITY.filter(r => matchesSearch(r, search))
+  }, [search])
 
   function replicateRecipe(r) {
     const bean = beans.find(b => b.name === r.beanName) || getActiveBean()
@@ -81,7 +97,7 @@ export default function Recipes() {
   }
 
   return (
-    <Layout searchPlaceholder="Search recipes...">
+    <Layout searchPlaceholder="Search recipes..." onSearch={setSearch}>
       <div className="max-w-[1440px] mx-auto px-4 py-6 md:px-10 md:py-10 space-y-8 md:space-y-10">
         <section className="space-y-1">
           <span className="text-[10px] font-bold tracking-[0.2em] text-on-surface-variant uppercase">Brew Intelligence</span>
@@ -115,7 +131,7 @@ export default function Recipes() {
         <section>
           <h3 className="font-headline text-2xl font-bold text-primary mb-6">Community Classics</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {COMMUNITY.map((r,i) => <RecipeCard key={i} recipe={r} idx={i+1} canReplicate={false} onUse={replicateRecipe} />)}
+            {communityRecipes.map((r,i) => <RecipeCard key={i} recipe={r} idx={i+1} canReplicate={false} onUse={replicateRecipe} />)}
           </div>
         </section>
       </div>
