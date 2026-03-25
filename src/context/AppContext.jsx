@@ -30,6 +30,7 @@ export function AppProvider({ children }) {
     }
 
     let initDone = false
+    let loadedUserId = null
     const markInitDone = () => {
       if (!initDone) {
         initDone = true
@@ -44,18 +45,24 @@ export function AppProvider({ children }) {
     // onAuthStateChange fires immediately with INITIAL_SESSION in Supabase v2,
     // so this handles both the initial load and subsequent auth events.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      // TOKEN_REFRESHED only rotates the JWT — user and data are unchanged
-      if (_event === 'TOKEN_REFRESHED') return
-
       const u = session?.user || null
-      setUser(u)
-      setDataUser(u)
-      if (u) {
-        await refresh(u)
-      } else {
-        setBeans([])
-        setBrews([])
+      const uid = u?.id || null
+
+      // Only reload data when the user identity actually changes.
+      // TOKEN_REFRESHED and SIGNED_IN (after token rotation) keep the same
+      // user ID — skipping them prevents duplicate queries on every page load.
+      if (uid !== loadedUserId) {
+        loadedUserId = uid
+        setUser(u)
+        setDataUser(u)
+        if (u) {
+          await refresh(u)
+        } else {
+          setBeans([])
+          setBrews([])
+        }
       }
+
       markInitDone()
     })
 
