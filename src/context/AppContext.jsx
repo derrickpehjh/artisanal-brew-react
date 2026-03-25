@@ -44,6 +44,9 @@ export function AppProvider({ children }) {
     // onAuthStateChange fires immediately with INITIAL_SESSION in Supabase v2,
     // so this handles both the initial load and subsequent auth events.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      // TOKEN_REFRESHED only rotates the JWT — user and data are unchanged
+      if (_event === 'TOKEN_REFRESHED') return
+
       const u = session?.user || null
       setUser(u)
       setDataUser(u)
