@@ -94,15 +94,17 @@ export default function Layout({ children, searchPlaceholder = 'Search archives.
             </div>
             <span className="font-headline text-sm text-primary leading-tight">The Artisanal Brew</span>
           </div>
-          <div className="hidden md:flex items-center gap-3 bg-surface-container-high rounded-full px-4 py-2 w-96">
-            <span className="material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
-            <input
-              type="text"
-              placeholder={searchPlaceholder}
-              className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-on-surface-variant/60 text-on-surface outline-none"
-              onChange={e => onSearch?.(e.target.value)}
-            />
-          </div>
+          {onSearch && (
+            <div className="hidden md:flex items-center gap-3 bg-surface-container-high rounded-full px-4 py-2 w-96">
+              <span className="material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
+              <input
+                type="text"
+                placeholder={searchPlaceholder}
+                className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-on-surface-variant/60 text-on-surface outline-none"
+                onChange={e => onSearch(e.target.value)}
+              />
+            </div>
+          )}
           <div className="flex items-center gap-4 md:gap-6">
             <button onClick={() => alert('No new notifications.')} className="text-on-surface-variant hover:text-primary transition-colors">
               <span className="material-symbols-outlined">notifications</span>
