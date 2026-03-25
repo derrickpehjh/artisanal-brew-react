@@ -56,6 +56,11 @@ export function AppProvider({ children }) {
         setUser(u)
         setDataUser(u)
         if (u) {
+          // Sync brew preferences from Supabase user metadata to localStorage
+          // so BrewSetup picks them up immediately on any device
+          if (u.user_metadata?.brew_prefs) {
+            try { localStorage.setItem('artisanal_brew_prefs', JSON.stringify(u.user_metadata.brew_prefs)) } catch {}
+          }
           await refresh(u)
         } else {
           setBeans([])
