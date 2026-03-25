@@ -29,26 +29,20 @@ export function AppProvider({ children }) {
       return
     }
 
-    const initialize = async () => {
-      try {
-        const timeout = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Session init timed out')), 10000)
-        )
-        const { data: { session } } = await Promise.race([supabase.auth.getSession(), timeout])
-        const u = session?.user || null
-        setUser(u)
-        setDataUser(u)
-        if (u) await refresh(u)
-      } catch (e) {
-        console.error('App initialization failed:', e)
-      } finally {
+    let initDone = false
+    const markInitDone = () => {
+      if (!initDone) {
+        initDone = true
         setLoading(false)
         setInitialized(true)
       }
     }
 
-    initialize()
+    // Safety timeout — guarantees loading always clears even if auth hangs
+    const safetyTimer = setTimeout(markInitDone, 10000)
 
+    // onAuthStateChange fires immediately with INITIAL_SESSION in Supabase v2,
+    // so this handles both the initial load and subsequent auth events.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const u = session?.user || null
       setUser(u)
@@ -59,8 +53,13 @@ export function AppProvider({ children }) {
         setBeans([])
         setBrews([])
       }
+      markInitDone()
     })
-    return () => subscription.unsubscribe()
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(safetyTimer)
+    }
   }, [refresh])
 
   const addBean = useCallback(async (bean) => {
