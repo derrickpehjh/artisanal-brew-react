@@ -55,11 +55,28 @@ function parseIsoDate(value) {
 function normalizeDateInput(value) {
   const raw = String(value || '').trim()
   if (!raw) return ''
+
+  // Already ISO YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw
-  const cleaned = raw.replace(/\./g, '-').replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$3-$2-$1')
-  const parsed = new Date(cleaned)
-  if (Number.isNaN(parsed.getTime())) return ''
-  return toIsoDateString(parsed)
+
+  // YYYY/MM/DD or YYYY.MM.DD
+  if (/^\d{4}[\/\.]\d{2}[\/\.]\d{2}$/.test(raw)) return raw.replace(/[\/\.]/g, '-')
+
+  // Compact YYYYMMDD
+  if (/^\d{8}$/.test(raw)) return `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`
+
+  // DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY (any 1-2 digit day/month + 4-digit year)
+  const dmy = raw.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})$/)
+  if (dmy) {
+    const [, d, m, y] = dmy
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+  }
+
+  // Fallback: native Date parsing (handles "Oct 12 2024", "October 12, 2024", etc.)
+  const parsed = new Date(raw)
+  if (!Number.isNaN(parsed.getTime())) return toIsoDateString(parsed)
+
+  return ''
 }
 
 function parseGramValue(value) {
