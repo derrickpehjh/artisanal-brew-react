@@ -29,7 +29,7 @@ Return ONLY a valid JSON object with these exact fields (use null for any you ca
   "origin": "Country or region of origin",
   "process": "Processing method, e.g. 'Washed Process', 'Natural Process', 'Honey Process'",
   "roastLevel": "Exactly one of: Light, Light-Medium, Medium, Medium-Dark, Dark",
-  "roastDate": "Roast date as printed on the bag (any format is fine, e.g. '2024.10.12' or 'Oct 12 2024')",
+  "roastDate": "Roast date in YYYY-MM-DD format (e.g. '2024-10-12'). Convert from whatever format is printed. If only month and year are visible, use the 1st of that month (e.g. '2024-10-01').",
   "totalGrams": 250,
   "notes": "Tasting notes or flavour descriptors from the bag, translated to English and written as a short sentence"
 }
