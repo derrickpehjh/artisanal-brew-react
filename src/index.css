@@ -132,6 +132,21 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 .animate-spin { animation: spin 1s linear infinite; }
 
+@keyframes brew-icon-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.88); opacity: 0.6; }
+}
+@keyframes brew-dot-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+  30% { transform: translateY(-7px); opacity: 1; }
+}
+.loading-brew-icon { animation: brew-icon-pulse 2s ease-in-out infinite; }
+.loading-brew-dot {
+  width: 7px; height: 7px; border-radius: 9999px;
+  background-color: #271310;
+  animation: brew-dot-bounce 1.2s ease-in-out infinite;
+}
+
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d3c3c0; border-radius: 2px; }

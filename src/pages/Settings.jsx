@@ -2,10 +2,25 @@ import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
 
+const PREFS_KEY = 'artisanal_brew_prefs'
+const PREFS_DEFAULTS = { dose: 18.5, water: 310, temp: 94, grindSize: '24 clicks (Comandante)', method: 'V60' }
+
+function loadPrefs() {
+  try { return { ...PREFS_DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') } } catch { return { ...PREFS_DEFAULTS } }
+}
+
 export default function Settings() {
   const { user, beans, brews, stats, signOut, resetAllData } = useApp()
   const [signingOut, setSigningOut] = useState(false)
   const [resetting, setResetting] = useState(false)
+  const [prefs, setPrefs] = useState(loadPrefs)
+  const [prefsSaved, setPrefsSaved] = useState(false)
+
+  function savePrefs() {
+    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
+    setPrefsSaved(true)
+    setTimeout(() => setPrefsSaved(false), 2000)
+  }
 
   const meta = user?.user_metadata || {}
   const displayName = meta.full_name || meta.name || 'Brewer'
@@ -94,6 +109,53 @@ export default function Settings() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Brew Preferences */}
+        <section className="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_4px_20px_rgba(62,39,35,0.04)]">
+          <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-6">Brew Preferences</h3>
+          <p className="text-xs text-on-surface-variant mb-6">These defaults are pre-filled in Brew Setup each time you start a new session.</p>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            {[
+              { label: 'Default Dose', key: 'dose', type: 'number', unit: 'g', min: 5, max: 40, step: 0.5 },
+              { label: 'Default Water', key: 'water', type: 'number', unit: 'g', min: 50, max: 600, step: 10 },
+              { label: 'Default Temp', key: 'temp', type: 'number', unit: '°C', min: 60, max: 100, step: 1 },
+            ].map(({ label, key, type, unit, min, max, step }) => (
+              <div key={key}>
+                <label className="block text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1.5">{label}</label>
+                <div className="flex items-center gap-2 bg-surface-container rounded-xl px-4 py-3">
+                  <input
+                    type={type} min={min} max={max} step={step}
+                    value={prefs[key]}
+                    onChange={e => setPrefs(p => ({ ...p, [key]: parseFloat(e.target.value) || p[key] }))}
+                    className="flex-1 bg-transparent text-sm font-bold text-on-surface outline-none border-none w-0 min-w-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <span className="text-xs text-on-surface-variant shrink-0">{unit}</span>
+                </div>
+              </div>
+            ))}
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1.5">Default Method</label>
+              <select value={prefs.method} onChange={e => setPrefs(p => ({ ...p, method: e.target.value }))} className="w-full bg-surface-container rounded-xl px-4 py-3 text-sm font-bold text-on-surface outline-none border-none focus:ring-1 focus:ring-primary/30">
+                {['V60','Chemex','AeroPress','French Press'].map(m => <option key={m}>{m}</option>)}
+              </select>
+            </div>
+            <div className="col-span-2">
+              <label className="block text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1.5">Default Grind Size</label>
+              <input
+                value={prefs.grindSize}
+                onChange={e => setPrefs(p => ({ ...p, grindSize: e.target.value }))}
+                placeholder="e.g. 24 clicks (Comandante)"
+                className="w-full bg-surface-container rounded-xl px-4 py-3 text-sm text-on-surface outline-none border-none focus:ring-1 focus:ring-primary/30"
+              />
+            </div>
+          </div>
+          <button onClick={savePrefs} className="flex items-center gap-2 px-5 py-2.5 brew-gradient text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all">
+            {prefsSaved
+              ? <><span className="material-symbols-outlined text-[16px]" style={{fontVariationSettings:"'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24"}}>check_circle</span>Saved</>
+              : <><span className="material-symbols-outlined text-[16px]">save</span>Save Preferences</>
+            }
+          </button>
         </section>
 
         {/* Data Management */}

@@ -43,7 +43,14 @@ export default function TasteAnalysis() {
 
   const [rating, setRating] = useState(4)
   const [tags, setTags] = useState(new Set(brew?.tasteTags || []))
-  const [availTags, setAvailTags] = useState([...DEFAULT_TAGS])
+  const [availTags, setAvailTags] = useState(() => {
+    try {
+      const custom = JSON.parse(localStorage.getItem('artisanal_custom_tags') || '[]')
+      return [...DEFAULT_TAGS, ...custom.filter(t => !DEFAULT_TAGS.includes(t))]
+    } catch { return [...DEFAULT_TAGS] }
+  })
+  const [customTagInput, setCustomTagInput] = useState('')
+  const [showCustomTagInput, setShowCustomTagInput] = useState(false)
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -59,12 +66,19 @@ export default function TasteAnalysis() {
     })
   }
 
-  function addCustomTag() {
-    const label = prompt('Enter a custom taste note:')
-    if (!label?.trim()) return
-    const t = label.trim()
-    setAvailTags(prev => [...prev, t])
+  function submitCustomTag() {
+    const t = customTagInput.trim()
+    if (!t) return
+    if (!availTags.includes(t)) {
+      try {
+        const stored = JSON.parse(localStorage.getItem('artisanal_custom_tags') || '[]')
+        localStorage.setItem('artisanal_custom_tags', JSON.stringify([...stored, t]))
+      } catch {}
+      setAvailTags(prev => [...prev, t])
+    }
     setTags(prev => new Set([...prev, t]))
+    setCustomTagInput('')
+    setShowCustomTagInput(false)
   }
 
   function getAI() {
@@ -202,9 +216,24 @@ export default function TasteAnalysis() {
                 {availTags.map(t => (
                   <button key={t} onClick={() => toggleTag(t)} className={`px-4 py-2 text-xs font-bold rounded-full transition-all active:scale-95 ${tags.has(t)?'tag-active':'tag-inactive hover:bg-surface-container-highest'}`}>{t}</button>
                 ))}
-                <button onClick={addCustomTag} className="px-4 py-2 border border-dashed border-outline-variant text-on-surface-variant text-xs font-bold rounded-full flex items-center gap-1 hover:border-outline hover:text-primary transition-colors">
-                  <span className="material-symbols-outlined text-[14px]">add</span>Add Custom
-                </button>
+                {showCustomTagInput ? (
+                  <div className="flex items-center gap-1.5 w-full mt-1">
+                    <input
+                      autoFocus
+                      value={customTagInput}
+                      onChange={e => setCustomTagInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') submitCustomTag(); if (e.key === 'Escape') { setShowCustomTagInput(false); setCustomTagInput('') } }}
+                      placeholder="e.g. Berry"
+                      className="flex-1 bg-surface-container rounded-full px-4 py-2 text-xs text-on-surface outline-none focus:ring-1 focus:ring-primary/30 border-none"
+                    />
+                    <button onClick={submitCustomTag} className="px-3 py-2 bg-primary text-white text-xs font-bold rounded-full hover:opacity-90 transition-opacity">Add</button>
+                    <button onClick={() => { setShowCustomTagInput(false); setCustomTagInput('') }} className="px-3 py-2 bg-surface-container-high text-on-surface-variant text-xs font-bold rounded-full hover:bg-surface-container-highest transition-colors">Cancel</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setShowCustomTagInput(true)} className="px-4 py-2 border border-dashed border-outline-variant text-on-surface-variant text-xs font-bold rounded-full flex items-center gap-1 hover:border-outline hover:text-primary transition-colors">
+                    <span className="material-symbols-outlined text-[14px]">add</span>Add Custom
+                  </button>
+                )}
               </div>
             </div>
 
