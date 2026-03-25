@@ -106,29 +106,29 @@ export default function Beans() {
   const [freshness, setFreshness] = useState(null)
   const [freshnessTips, setFreshnessTips] = useState(null)
   const [loadingTips, setLoadingTips] = useState(false)
-  const [tipsError, setTipsError] = useState(false)
+  const [tipsError, setTipsError] = useState(null)
 
   // Form state
   const [form, setForm] = useState({ name:'', origin:'', process:'', roastLevel:'Medium', roastDate:'', totalGrams:'', remainingGrams:'', notes:'' })
 
   function fetchFreshnessTips(bean, f) {
     setLoadingTips(true)
-    setTipsError(false)
+    setTipsError(null)
     setFreshnessTips(null)
     getStalenessAdvice(bean, f.days, f.status)
-      .then(tips => { if (tips) setFreshnessTips(tips); else setTipsError(true) })
-      .catch(() => setTipsError(true))
+      .then(tips => { if (tips) setFreshnessTips(tips); else setTipsError('No response from AI.') })
+      .catch(e => setTipsError(e?.message || 'Unknown error'))
       .finally(() => setLoadingTips(false))
   }
 
   useEffect(() => {
-    if (!detailBeanId) { setFreshness(null); setFreshnessTips(null); setTipsError(false); return }
+    if (!detailBeanId) { setFreshness(null); setFreshnessTips(null); setTipsError(null); return }
     const bean = beans.find(b => b.id === detailBeanId)
     if (!bean) return
     const f = assessFreshness(bean.roastDate)
     setFreshness(f)
     setFreshnessTips(null)
-    setTipsError(false)
+    setTipsError(null)
     if (f && f.status !== 'peak' && f.status !== 'future') fetchFreshnessTips(bean, f)
   }, [detailBeanId, beans])
 
@@ -487,11 +487,11 @@ export default function Beans() {
                                 <p className="text-[10px] text-on-surface leading-relaxed whitespace-pre-line">{freshnessTips}</p>
                               </div>
                             ) : tipsError ? (
-                              <div className="mt-1 flex items-center justify-between gap-2">
-                                <p className="text-[10px] text-on-surface-variant italic">Could not load AI tips.</p>
+                              <div className="mt-1 p-2 bg-error-container/20 rounded-lg">
+                                <p className="text-[10px] text-error font-medium mb-1">{tipsError}</p>
                                 <button
                                   onClick={() => fetchFreshnessTips(detailBean, freshness)}
-                                  className="text-[10px] font-bold text-primary flex items-center gap-1 hover:underline shrink-0"
+                                  className="text-[10px] font-bold text-primary flex items-center gap-1 hover:underline"
                                 >
                                   <span className="material-symbols-outlined text-[12px]">refresh</span>Retry
                                 </button>
