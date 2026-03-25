@@ -4,6 +4,10 @@ import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
 import { generateBrewRecipe } from '../lib/aiBrewAssist'
 
+function loadBrewPrefs() {
+  try { return JSON.parse(localStorage.getItem('artisanal_brew_prefs') || '{}') } catch { return {} }
+}
+
 const METHODS = [
   { id:'V60', time:'03:15 min', pattern:'50g bloom + 2 equal pours' },
   { id:'Chemex', time:'04:30 min', pattern:'60g bloom + 2 equal pours' },
@@ -18,12 +22,13 @@ export default function BrewSetup() {
   const pending = getPendingBrew()
   const activeBean = getActiveBean()
 
+  const savedPrefs = loadBrewPrefs()
   const [selectedBeanId, setSelectedBeanId] = useState(pending?.beanId || activeBean?.id || '')
-  const [selectedMethod, setSelectedMethod] = useState(pending?.method || 'V60')
-  const [dose, setDose] = useState(pending?.dose || 18.5)
-  const [water, setWater] = useState(pending?.water || 310)
-  const [temp, setTemp] = useState(pending?.temp || 94)
-  const [grind, setGrind] = useState(pending?.grindSize || '24 clicks (Comandante)')
+  const [selectedMethod, setSelectedMethod] = useState(pending?.method || savedPrefs.method || 'V60')
+  const [dose, setDose] = useState(pending?.dose || savedPrefs.dose || 18.5)
+  const [water, setWater] = useState(pending?.water || savedPrefs.water || 310)
+  const [temp, setTemp] = useState(pending?.temp || savedPrefs.temp || 94)
+  const [grind, setGrind] = useState(pending?.grindSize || savedPrefs.grindSize || '24 clicks (Comandante)')
   const [showBeanPicker, setShowBeanPicker] = useState(false)
   const [showTip, setShowTip] = useState(false)
   const [generatingRecipe, setGeneratingRecipe] = useState(false)
@@ -46,6 +51,8 @@ export default function BrewSetup() {
   const tds = ((dose/water)*100*1.2)
   const lastBrew = brews[0] || null
   const brewsLeft = selectedBean?.remainingGrams ? Math.floor(selectedBean.remainingGrams / dose) : 0
+  const beanBrews = brews.filter(b => b.beanId === selectedBeanId)
+  const myBeanAvgRating = beanBrews.length ? (beanBrews.reduce((s,b) => s + b.rating, 0) / beanBrews.length).toFixed(1) : null
 
   async function handleGenerateRecipe() {
     const bean = beans.find(b => b.id === selectedBeanId) || activeBean
@@ -242,7 +249,7 @@ export default function BrewSetup() {
             { icon:'history', label:'Last brewed', value: lastBrew ? formatDate(lastBrew.date) : 'Never' },
             { icon:'monitoring', label:'Predicted TDS', value: `${(tds*0.9).toFixed(2)}% – ${(tds*1.1).toFixed(2)}%` },
             { icon:'inventory_2', label:'Bean Stock', value: `~${brewsLeft} brews left (${selectedBean?.remainingGrams||0}g)` },
-            { icon:'star', label:'Community Rating', value: selectedBean?.communityRating ? `${selectedBean.communityRating} (${((selectedBean.communityReviews||0)/1000).toFixed(1)}k)` : '—', fill:true },
+            { icon:'star', label:'My Rating', value: myBeanAvgRating ? `${myBeanAvgRating} / 5 (${beanBrews.length} brew${beanBrews.length!==1?'s':''})` : 'No brews yet', fill:true },
           ].map(s => (
             <div key={s.label} className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-primary shrink-0">

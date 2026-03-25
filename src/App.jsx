@@ -12,7 +12,19 @@ import Settings from './pages/Settings'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useApp()
-  if (loading) return <div className="flex items-center justify-center h-screen bg-background"><div className="font-headline text-primary text-2xl">Loading…</div></div>
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center h-screen bg-background gap-3">
+      <div className="loading-brew-icon">
+        <span className="material-symbols-outlined text-primary" style={{fontSize:'52px', fontVariationSettings:"'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 48"}}>coffee</span>
+      </div>
+      <p className="font-headline text-xl text-primary font-bold mt-2">Artisanal Brew</p>
+      <div className="flex gap-1.5">
+        <span className="loading-brew-dot" style={{animationDelay:'0ms'}}></span>
+        <span className="loading-brew-dot" style={{animationDelay:'180ms'}}></span>
+        <span className="loading-brew-dot" style={{animationDelay:'360ms'}}></span>
+      </div>
+    </div>
+  )
   if (!user) return <Navigate to="/login" replace />
   return children
 }

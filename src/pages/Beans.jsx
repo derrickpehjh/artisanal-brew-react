@@ -135,13 +135,16 @@ export default function Beans() {
     let result = [...beans]
     if (search) result = result.filter(b => b.name.toLowerCase().includes(search.toLowerCase()) || b.origin.toLowerCase().includes(search.toLowerCase()))
     if (filter === 'low') result = result.filter(b => b.remainingGrams / b.totalGrams <= 0.3)
-    if (filter === 'fav') result = result.filter(b => (b.communityRating || 0) >= 4.5)
+    if (filter === 'fav') result = result.filter(b => {
+      const bBrws = brews.filter(br => br.beanId === b.id || ((!br.beanId || br.beanId === 'undefined') && normName(br.beanName) === normName(b.name)))
+      return bBrws.length > 0 && (bBrws.reduce((s,bw) => s + bw.rating, 0) / bBrws.length) >= 4
+    })
     return result.sort((a,b) => (b.id === activeBean?.id ? 1 : 0) - (a.id === activeBean?.id ? 1 : 0))
-  }, [beans, search, filter, activeBean])
+  }, [beans, brews, search, filter, activeBean])
 
   const totalStock = beans.reduce((s, b) => s + b.remainingGrams, 0)
   const lowCount = beans.filter(b => b.remainingGrams / b.totalGrams <= 0.2).length
-  const avgRating = beans.length ? (beans.reduce((s,b) => s + (b.communityRating||0), 0) / beans.length).toFixed(1) : '—'
+  const avgRating = brews.length ? (brews.reduce((s,b) => s + b.rating, 0) / brews.length).toFixed(1) : '—'
 
   const detailBean = detailBeanId ? beans.find(b => b.id === detailBeanId) : null
   const detailBrews = detailBean ? getBeanBrews(detailBean) : []
@@ -267,7 +270,7 @@ export default function Beans() {
       roastLevel: form.roastLevel, roastDate: normalizeDateInput(form.roastDate) || null,
       totalGrams,
       remainingGrams,
-      notes: form.notes.trim(), communityRating: 4.5, communityReviews: 0,
+      notes: form.notes.trim(),
     }
     try {
       if (editBean) await updateBean(editBean.id, bean)
@@ -337,7 +340,7 @@ export default function Beans() {
             { label:'Beans in Cellar', value:beans.length, icon:'grain', sub:`${activeBean?.name || ''} active`, warn:false },
             { label:'Total Stock', value:`${totalStock}g`, icon:'scale', sub:`across ${beans.length} bean${beans.length!==1?'s':''}`, warn:false },
             { label:'Low Stock Alerts', value:lowCount, icon:'warning', sub:lowCount?'need restocking soon':'all stocked up', warn:lowCount>0 },
-            { label:'Avg Community Rating', value:avgRating, icon:'star', sub:'across your collection', warn:false },
+            { label:'Avg Brew Rating', value:avgRating, icon:'star', sub:'across all your brews', warn:false },
           ].map(it => (
             <div key={it.label} className="bg-surface-container-lowest rounded-xl p-5 shadow-[0_2px_12px_rgba(62,39,35,0.04)]">
               <div className="flex items-center gap-3 mb-2">
@@ -402,8 +405,8 @@ export default function Beans() {
                     <p className="text-[11px] text-on-surface-variant leading-relaxed italic line-clamp-2 mb-4">{bean.notes || 'No tasting notes added yet.'}</p>
                     <div className="flex items-center justify-between pt-3 border-t border-surface-container-highest">
                       <div className="flex items-center gap-1">
-                        <Stars rating={Math.round(bean.communityRating||0)} />
-                        <span className="text-[10px] font-bold text-on-surface-variant ml-1">{bean.communityRating||'—'}</span>
+                        <Stars rating={Math.round(parseFloat(avgR)||0)} />
+                        <span className="text-[10px] font-bold text-on-surface-variant ml-1">{avgR || '—'}</span>
                       </div>
                       <div className="text-right">
                         {avgR
@@ -482,16 +485,6 @@ export default function Beans() {
                         )}
                       </div>
                     )}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-2">Community</p>
-                  <div className="space-y-2.5">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-on-surface-variant">Rating</span>
-                      <div className="flex items-center gap-1"><Stars rating={Math.round(detailBean.communityRating||0)} /><span className="text-xs font-bold text-on-surface ml-1">{detailBean.communityRating||'—'}</span></div>
-                    </div>
-                    <div className="flex justify-between text-sm"><span className="text-on-surface-variant">Reviews</span><span className="font-semibold text-on-surface">{detailBean.communityReviews?.toLocaleString()||'—'} reviews</span></div>
                   </div>
                 </div>
                 <div>
