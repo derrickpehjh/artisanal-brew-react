@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase, isSupabaseConfigured } from './supabase'
 
 let _beans = []
 let _brews = []
@@ -109,6 +109,13 @@ function seedBrews(userId, beanIds) {
 export async function loadData(user) {
   _user = user
   try {
+    if (!isSupabaseConfigured || !supabase) {
+      if (!loadLocalSnapshot()) {
+        _beans = []; _brews = []
+      }
+      return { beans: _beans, brews: _brews }
+    }
+
     const [{ data: beans, error: beansErr }, { data: brews, error: brewsErr }] = await Promise.all([
       supabase.from('beans').select('*').eq('user_id', user.id).order('created_at'),
       supabase.from('brews').select('*').eq('user_id', user.id).order('date', { ascending: false }),
@@ -155,7 +162,7 @@ export async function addBean(bean) {
   }
 
   normalized.id = normalized.id || crypto.randomUUID()
-  if (_user) {
+  if (_user && isSupabaseConfigured && supabase) {
     const { error } = await withTimeout(
       supabase.from('beans').insert(beanToDb(normalized, _user.id)),
       DB_TIMEOUT_MS,
@@ -186,7 +193,7 @@ export async function updateBean(id, data) {
   }
 
   _beans[idx] = merged
-  if (_user) {
+  if (_user && isSupabaseConfigured && supabase) {
     const { error } = await withTimeout(
       supabase.from('beans').update(beanToDb(_beans[idx], _user.id)).eq('id', id).eq('user_id', _user.id),
       DB_TIMEOUT_MS,
@@ -213,7 +220,7 @@ export async function deleteBean(id) {
   ))
   saveLocalSnapshot()
 
-  if (_user) {
+  if (_user && isSupabaseConfigured && supabase) {
     try {
       const { error: brewsErr } = await supabase
         .from('brews')
@@ -278,10 +285,12 @@ export async function saveBrew(brew) {
 }
 
 export async function resetAllData(userId) {
-  await Promise.all([
-    supabase.from('brews').delete().eq('user_id', userId),
-    supabase.from('beans').delete().eq('user_id', userId),
-  ])
+  if (isSupabaseConfigured && supabase) {
+    await Promise.all([
+      supabase.from('brews').delete().eq('user_id', userId),
+      supabase.from('beans').delete().eq('user_id', userId),
+    ])
+  }
   _beans = []; _brews = []
   localStorage.removeItem('artisanal_pending_brew')
   localStorage.removeItem('artisanal_active_bean')
