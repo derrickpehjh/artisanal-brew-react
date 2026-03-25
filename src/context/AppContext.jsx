@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { loadData, setUser as setDataUser, getBeans, getBrews, getStats, addBean as _addBean, updateBean as _updateBean, deleteBean as _deleteBean, saveBrew as _saveBrew, resetAllData as _resetAllData, getPendingBrew, setPendingBrew, clearPendingBrew, getActiveBeanId, setActiveBeanId, formatDate, formatRatio, formatTime, buildChartPath, getTip, getPhases } from '../lib/appData'
 
 const AppContext = createContext(null)
@@ -23,6 +23,12 @@ export function AppProvider({ children }) {
   }, [])
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      setInitialized(true)
+      return
+    }
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       const u = session?.user || null
       setUser(u)
@@ -80,7 +86,7 @@ export function AppProvider({ children }) {
   }, [user])
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
+    if (supabase) await supabase.auth.signOut()
     localStorage.removeItem('artisanal_pending_brew')
     localStorage.removeItem('artisanal_active_bean')
   }, [])
@@ -105,6 +111,7 @@ export function AppProvider({ children }) {
     getPendingBrew, setPendingBrew, clearPendingBrew,
     // Utilities
     formatDate, formatRatio, formatTime, buildChartPath, getTip, getPhases,
+    isSupabaseConfigured,
     supabase,
   }
 

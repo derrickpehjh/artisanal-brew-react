@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext'
 const LAST_GOOGLE_EMAIL_KEY = 'artisanal_last_google_email'
 
 export default function Login() {
-  const { user, supabase } = useApp()
+  const { user, supabase, isSupabaseConfigured } = useApp()
   const navigate = useNavigate()
   const [lastGoogleEmail, setLastGoogleEmail] = useState(() => localStorage.getItem(LAST_GOOGLE_EMAIL_KEY) || '')
 
@@ -25,6 +25,11 @@ export default function Login() {
   }
 
   async function signInWithGoogle(forceAccountPicker = false) {
+    if (!supabase) {
+      alert('Supabase is not configured on this deployment. Add VITE_SUPABASE_URL and VITE_SUPABASE_KEY in Vercel Project Settings > Environment Variables.')
+      return
+    }
+
     const redirectTo = buildRedirectUrl()
     const options = { ...(redirectTo ? { redirectTo } : {}) }
     const lastEmail = localStorage.getItem(LAST_GOOGLE_EMAIL_KEY)
@@ -47,12 +52,22 @@ export default function Login() {
   }
 
   async function signInWithAnotherGoogleAccount() {
+    if (!supabase) {
+      alert('Supabase is not configured on this deployment.')
+      return
+    }
+
     // Clear local Supabase auth state before launching chooser flow.
     await supabase.auth.signOut({ scope: 'local' })
     await signInWithGoogle(true)
   }
 
   async function continueAsDemo() {
+    if (!supabase) {
+      alert('Supabase is not configured on this deployment.')
+      return
+    }
+
     const { error } = await supabase.auth.signInAnonymously()
     if (error) { alert('Demo mode unavailable: ' + error.message); return }
     navigate('/', { replace: true })
@@ -97,6 +112,11 @@ export default function Login() {
             <p className="text-on-surface-variant text-sm mt-3 leading-relaxed">Track your brews, analyse extractions, and perfect your craft — all in one place.</p>
           </div>
           <div className="flex flex-col gap-4">
+            {!isSupabaseConfigured && (
+              <div className="rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+                Authentication is not configured for this deployment. Add VITE_SUPABASE_URL and VITE_SUPABASE_KEY in Vercel environment variables.
+              </div>
+            )}
             <button onClick={() => signInWithGoogle(false)} className="w-full flex items-center justify-center gap-3 bg-surface-container-lowest border border-outline-variant rounded-xl px-6 py-4 font-bold text-on-background hover:bg-surface-container-high transition-colors shadow-sm text-sm group">
               <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
