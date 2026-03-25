@@ -10,14 +10,17 @@ function loadPrefs() {
 }
 
 export default function Settings() {
-  const { user, beans, brews, stats, signOut, resetAllData } = useApp()
+  const { user, beans, brews, stats, signOut, resetAllData, supabase } = useApp()
   const [signingOut, setSigningOut] = useState(false)
   const [resetting, setResetting] = useState(false)
   const [prefs, setPrefs] = useState(loadPrefs)
   const [prefsSaved, setPrefsSaved] = useState(false)
 
-  function savePrefs() {
+  async function savePrefs() {
     localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
+    if (supabase && user && !user.is_anonymous) {
+      try { await supabase.auth.updateUser({ data: { brew_prefs: prefs } }) } catch {}
+    }
     setPrefsSaved(true)
     setTimeout(() => setPrefsSaved(false), 2000)
   }
