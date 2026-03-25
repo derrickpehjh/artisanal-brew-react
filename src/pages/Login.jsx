@@ -20,8 +20,8 @@ export default function Login() {
   }, [user, navigate])
 
   function buildRedirectUrl() {
-    if (!/^https?:$/.test(window.location.protocol)) return null
-    return new URL('/', window.location.href).toString()
+    // Always use current origin for OAuth callback, works in both dev and production
+    return new URL('/', window.location.origin).toString()
   }
 
   async function signInWithGoogle(forceAccountPicker = false) {
@@ -31,7 +31,7 @@ export default function Login() {
     }
 
     const redirectTo = buildRedirectUrl()
-    const options = { ...(redirectTo ? { redirectTo } : {}) }
+    const options = { redirectTo }
     const lastEmail = localStorage.getItem(LAST_GOOGLE_EMAIL_KEY)
     if (forceAccountPicker) {
       // Force the Google account chooser instead of reusing the last account silently.
@@ -46,8 +46,7 @@ export default function Login() {
     }
     const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options })
     if (error) {
-      const suffix = redirectTo ? `\nExpected redirect URL: ${redirectTo}` : '\nOpen this app over http://localhost for OAuth sign-in.'
-      alert('Sign-in failed: ' + error.message + suffix)
+      alert('Sign-in failed: ' + error.message + `\nRedirect URL: ${redirectTo}\n\nMake sure this URL is added as an authorized redirect URI in Supabase Dashboard.`)
     }
   }
 
