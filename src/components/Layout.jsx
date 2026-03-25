@@ -48,7 +48,7 @@ export default function Layout({ children, searchPlaceholder = 'Search archives.
   return (
     <div className="bg-background text-on-background min-h-screen">
       {/* Sidebar */}
-      <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container-low flex flex-col py-8 gap-y-8 z-50">
+      <aside className="hidden md:flex h-screen w-64 fixed left-0 top-0 bg-surface-container-low flex-col py-8 gap-y-8 z-50">
         <div className="px-6 flex items-center gap-3">
           <div className="w-10 h-10 bg-primary-container rounded-full flex items-center justify-center shrink-0">
             <span className="material-symbols-outlined text-surface-container-low text-xl" style={{fontVariationSettings:"'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24"}}>coffee</span>
@@ -86,9 +86,15 @@ export default function Layout({ children, searchPlaceholder = 'Search archives.
       </aside>
 
       {/* Top Bar */}
-      <header className="fixed top-0 right-0 left-64 h-16 z-40 bg-background/80 backdrop-blur-xl shadow-[0_12px_40px_rgba(62,39,35,0.08)]">
-        <div className="flex justify-between items-center px-10 h-full max-w-[1440px] mx-auto w-full">
-          <div className="flex items-center gap-3 bg-surface-container-high rounded-full px-4 py-2 w-96">
+      <header className="fixed top-0 right-0 left-0 md:left-64 h-16 z-40 bg-background/80 backdrop-blur-xl shadow-[0_12px_40px_rgba(62,39,35,0.08)]">
+        <div className="flex justify-between items-center px-4 md:px-10 h-full max-w-[1440px] mx-auto w-full">
+          <div className="md:hidden flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary-container rounded-full flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-white text-base" style={{fontVariationSettings:"'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24"}}>coffee</span>
+            </div>
+            <span className="font-headline text-sm text-primary leading-tight">The Artisanal Brew</span>
+          </div>
+          <div className="hidden md:flex items-center gap-3 bg-surface-container-high rounded-full px-4 py-2 w-96">
             <span className="material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
             <input
               type="text"
@@ -97,12 +103,12 @@ export default function Layout({ children, searchPlaceholder = 'Search archives.
               onChange={e => onSearch?.(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 md:gap-6">
             <button onClick={() => alert('No new notifications.')} className="text-on-surface-variant hover:text-primary transition-colors">
               <span className="material-symbols-outlined">notifications</span>
             </button>
             <div className="flex items-center gap-3 pl-6 border-l border-outline-variant/20">
-              <div className="text-right">
+              <div className="text-right hidden sm:block">
                 <p className="text-xs font-bold text-primary">{displayName}</p>
                 <p className="text-[10px] text-on-surface-variant">{displaySub}</p>
               </div>
@@ -137,9 +143,26 @@ export default function Layout({ children, searchPlaceholder = 'Search archives.
       </header>
 
       {/* Main content */}
-      <main className="ml-64 pt-16 min-h-screen bg-surface">
+      <main className="ml-0 md:ml-64 pt-16 min-h-screen bg-surface pb-16 md:pb-0">
         {children}
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-low border-t border-outline-variant/20 flex items-stretch">
+        {[...NAV_LINKS, { to: '/settings', icon: 'settings', label: 'Settings', fill: false }].map(link => {
+          const active = isActive(link.to)
+          return (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 transition-colors ${active ? 'text-primary' : 'text-on-surface-variant'}`}
+            >
+              <span className="material-symbols-outlined text-[22px]" style={active ? {fontVariationSettings:"'FILL' 1,'wght' 600,'GRAD' 0,'opsz' 24"} : {}}>{link.icon}</span>
+              <span className="text-[9px] font-bold uppercase tracking-wide leading-none">{link.label}</span>
+            </Link>
+          )
+        })}
+      </nav>
     </div>
   )
 }

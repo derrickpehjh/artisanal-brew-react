@@ -96,15 +96,15 @@ export default function Analytics() {
 
   return (
     <Layout searchPlaceholder="Search analytics or history..." onSearch={setSearch}>
-      <div className="max-w-[1440px] mx-auto px-10 py-10 space-y-10">
+      <div className="max-w-[1440px] mx-auto px-4 py-6 md:px-10 md:py-10 space-y-8 md:space-y-10">
         <section className="space-y-1">
           <span className="text-[10px] font-bold tracking-[0.2em] text-on-surface-variant uppercase">Brew Intelligence</span>
           <h2 className="font-headline text-5xl font-bold text-primary leading-tight">Analytics &amp; History</h2>
         </section>
 
-        <div className="grid grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
           {/* Left: Chart + Best Brews */}
-          <div className="col-span-8 flex flex-col gap-10">
+          <div className="col-span-1 md:col-span-8 flex flex-col gap-8 md:gap-10">
             {/* Chart */}
             <div className="bg-surface-container-lowest rounded-xl p-8 shadow-[0_12px_40px_rgba(62,39,35,0.04)]">
               <div className="flex justify-between items-end mb-8">
@@ -155,7 +155,7 @@ export default function Analytics() {
                   View Gallery <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {bestBrews.map((b, i) => (
                   <div key={b.id} className="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(62,39,35,0.04)] hover:shadow-xl transition-all">
                     <div className="h-48 overflow-hidden relative">
@@ -191,7 +191,7 @@ export default function Analytics() {
           </div>
 
           {/* Right: History + Stats */}
-          <aside className="col-span-4 flex flex-col gap-6 sticky top-24">
+          <aside className="col-span-1 md:col-span-4 flex flex-col gap-6 md:sticky md:top-24">
             <div className="bg-surface-container-low rounded-xl p-7">
               <h3 className="font-headline text-2xl font-bold text-primary mb-7">Recent Brew History</h3>
               <div className="flex flex-col">

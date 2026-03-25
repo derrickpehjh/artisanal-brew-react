@@ -165,7 +165,7 @@ export default function TasteAnalysis() {
 
   return (
     <Layout>
-      <div className="max-w-[1440px] mx-auto px-10 py-10 space-y-12">
+      <div className="max-w-[1440px] mx-auto px-4 py-6 md:px-10 md:py-10 space-y-10 md:space-y-12">
         {/* Header */}
         <header className="space-y-3">
           <nav className="flex items-center gap-2 text-sm text-on-surface-variant">
@@ -178,9 +178,9 @@ export default function TasteAnalysis() {
         </header>
 
         {/* Bento grid */}
-        <div className="grid grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
           {/* Left: Ratings + Tags + Notes */}
-          <section className="col-span-4 flex flex-col gap-6">
+          <section className="col-span-1 md:col-span-4 flex flex-col gap-6">
             {/* Cup Rating */}
             <div className="bg-surface-container-lowest p-7 rounded-xl shadow-[0_4px_20px_rgba(62,39,35,0.04)]">
               <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-6">Overall Satisfaction</h3>
@@ -216,7 +216,7 @@ export default function TasteAnalysis() {
           </section>
 
           {/* Center: AI Sommelier */}
-          <section className="col-span-5">
+          <section className="col-span-1 md:col-span-5">
             <div className="relative h-full min-h-[560px] rounded-xl overflow-hidden bg-primary-container shadow-2xl">
               <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80" alt="Coffee steam" className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay"/>
               <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/70 to-transparent"></div>
@@ -240,7 +240,7 @@ export default function TasteAnalysis() {
           </section>
 
           {/* Right: Today's Roast + Actions */}
-          <section className="col-span-3 flex flex-col gap-6">
+          <section className="col-span-1 md:col-span-3 flex flex-col gap-6">
             <div className="bg-surface-container-lowest p-7 rounded-xl shadow-[0_4px_20px_rgba(62,39,35,0.04)]">
               <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-5">Today's Roast</h3>
               <div className="flex items-center gap-4 mb-6">
@@ -322,8 +322,8 @@ export default function TasteAnalysis() {
         {/* Deep analysis */}
         <section className="space-y-6">
           <h3 className="font-headline text-2xl font-bold text-primary border-l-4 border-primary-container pl-5">Deep Extraction Analysis</h3>
-          <div className="grid grid-cols-12 gap-8 items-start">
-            <div className="col-span-7 bg-surface-container-low p-9 rounded-xl">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
+            <div className="col-span-1 md:col-span-7 bg-surface-container-low p-6 md:p-9 rounded-xl">
               <h4 className="font-headline text-lg mb-4 italic text-primary">The Roaster's Notes</h4>
               <p className="text-on-surface-variant leading-relaxed text-sm mb-6">{getRoastersNotes()}</p>
               <button onClick={() => document.querySelector('textarea')?.focus()} className="flex items-center gap-3 group">
@@ -333,7 +333,7 @@ export default function TasteAnalysis() {
                 <span className="text-xs font-bold text-primary uppercase tracking-widest">Add personal tasting notes…</span>
               </button>
             </div>
-            <div className="col-span-5 grid grid-cols-2 gap-4">
+            <div className="col-span-1 md:col-span-5 grid grid-cols-2 gap-4">
               {[
                 ['Acidity', scores.acidity.toFixed(1), 'border-tertiary', 'text-tertiary'],
                 ['Body', scores.body.toFixed(1), 'border-primary-container', 'text-primary'],

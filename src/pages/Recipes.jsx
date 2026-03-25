@@ -82,7 +82,7 @@ export default function Recipes() {
 
   return (
     <Layout searchPlaceholder="Search recipes...">
-      <div className="max-w-[1440px] mx-auto px-10 py-10 space-y-10">
+      <div className="max-w-[1440px] mx-auto px-4 py-6 md:px-10 md:py-10 space-y-8 md:space-y-10">
         <section className="space-y-1">
           <span className="text-[10px] font-bold tracking-[0.2em] text-on-surface-variant uppercase">Brew Intelligence</span>
           <h2 className="font-headline text-5xl font-bold text-primary leading-tight">Recipes</h2>
@@ -96,12 +96,12 @@ export default function Recipes() {
             <Link to="/analytics" className="text-xs font-bold text-primary underline underline-offset-4 hover:text-on-surface-variant transition-colors uppercase tracking-wide">View Analytics</Link>
           </div>
           {bestBrews.length > 0 ? (
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {bestBrews.map((b,i) => <RecipeCard key={b.id} recipe={b} idx={i} canReplicate onUse={replicateRecipe} />)}
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-6">
-              <div className="col-span-3 py-12 text-center text-on-surface-variant">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              <div className="col-span-1 sm:col-span-2 md:col-span-3 py-12 text-center text-on-surface-variant">
                 <span className="material-symbols-outlined text-5xl mb-3 opacity-30 block">coffee</span>
                 <p className="font-headline text-lg text-primary mb-1">No brews yet</p>
                 <p className="text-sm mb-4">Log your first brew to save recipes from your best sessions.</p>
@@ -114,7 +114,7 @@ export default function Recipes() {
         {/* Community Classics */}
         <section>
           <h3 className="font-headline text-2xl font-bold text-primary mb-6">Community Classics</h3>
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {COMMUNITY.map((r,i) => <RecipeCard key={i} recipe={r} idx={i+1} canReplicate={false} onUse={replicateRecipe} />)}
           </div>
         </section>

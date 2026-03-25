@@ -34,11 +34,11 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="max-w-[1440px] mx-auto px-10 py-10">
-        <div className="grid grid-cols-12 gap-8">
+      <div className="max-w-[1440px] mx-auto px-4 py-6 md:px-10 md:py-10">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
 
           {/* Left: Cellar */}
-          <div className="col-span-3 flex flex-col gap-5">
+          <div className="col-span-1 md:col-span-3 flex flex-col gap-5">
             <div className="flex items-end justify-between">
               <h2 className="font-headline text-2xl text-primary">The Cellar</h2>
               <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-tight">{beans.length} Beans Total</span>
@@ -94,7 +94,7 @@ export default function Dashboard() {
           </div>
 
           {/* Center: Hero + Last Brew */}
-          <div className="col-span-6 flex flex-col gap-8">
+          <div className="col-span-1 md:col-span-6 flex flex-col gap-8">
             <div className="relative rounded-2xl overflow-hidden h-72 group shadow-2xl">
               <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=900&q=80" alt="Pour over coffee brewing" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-transparent"></div>
@@ -132,7 +132,7 @@ export default function Dashboard() {
                         <p className="text-xs font-bold text-primary">{last.rating}.0 / 5.0</p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
                       {[['Ratio',last.ratio||formatRatio(last.dose,last.water)],['Dose',last.dose+'g'],['Time',last.brewTime],['Temp',last.temp+'°C']].map(([l,v])=>(
                         <div key={l} className="p-4 bg-surface-container-low rounded-xl">
                           <p className="text-[9px] text-on-surface-variant uppercase font-bold mb-1.5">{l}</p>
@@ -155,7 +155,7 @@ export default function Dashboard() {
           </div>
 
           {/* Right: Efficiency */}
-          <div className="col-span-3 flex flex-col gap-8">
+          <div className="col-span-1 md:col-span-3 flex flex-col gap-8">
             <h2 className="font-headline text-2xl text-primary">Efficiency</h2>
             <div className="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_4px_20px_rgba(62,39,35,0.04)] flex flex-col items-center text-center">
               <div className="relative w-36 h-36 mb-5">
