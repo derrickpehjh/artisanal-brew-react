@@ -106,24 +106,30 @@ export default function Beans() {
   const [freshness, setFreshness] = useState(null)
   const [freshnessTips, setFreshnessTips] = useState(null)
   const [loadingTips, setLoadingTips] = useState(false)
+  const [tipsError, setTipsError] = useState(false)
 
   // Form state
   const [form, setForm] = useState({ name:'', origin:'', process:'', roastLevel:'Medium', roastDate:'', totalGrams:'', remainingGrams:'', notes:'' })
 
+  function fetchFreshnessTips(bean, f) {
+    setLoadingTips(true)
+    setTipsError(false)
+    setFreshnessTips(null)
+    getStalenessAdvice(bean, f.days, f.status)
+      .then(tips => { if (tips) setFreshnessTips(tips); else setTipsError(true) })
+      .catch(() => setTipsError(true))
+      .finally(() => setLoadingTips(false))
+  }
+
   useEffect(() => {
-    if (!detailBeanId) { setFreshness(null); setFreshnessTips(null); return }
+    if (!detailBeanId) { setFreshness(null); setFreshnessTips(null); setTipsError(false); return }
     const bean = beans.find(b => b.id === detailBeanId)
     if (!bean) return
     const f = assessFreshness(bean.roastDate)
     setFreshness(f)
     setFreshnessTips(null)
-    if (f && f.status !== 'peak' && f.status !== 'future') {
-      setLoadingTips(true)
-      getStalenessAdvice(bean, f.days, f.status)
-        .then(tips => setFreshnessTips(tips))
-        .catch(() => setFreshnessTips(null))
-        .finally(() => setLoadingTips(false))
-    }
+    setTipsError(false)
+    if (f && f.status !== 'peak' && f.status !== 'future') fetchFreshnessTips(bean, f)
   }, [detailBeanId, beans])
 
   const getBeanBrews = (bean) => brews.filter(br =>
@@ -479,6 +485,16 @@ export default function Beans() {
                                   AI Compensation Tips
                                 </p>
                                 <p className="text-[10px] text-on-surface leading-relaxed whitespace-pre-line">{freshnessTips}</p>
+                              </div>
+                            ) : tipsError ? (
+                              <div className="mt-1 flex items-center justify-between gap-2">
+                                <p className="text-[10px] text-on-surface-variant italic">Could not load AI tips.</p>
+                                <button
+                                  onClick={() => fetchFreshnessTips(detailBean, freshness)}
+                                  className="text-[10px] font-bold text-primary flex items-center gap-1 hover:underline shrink-0"
+                                >
+                                  <span className="material-symbols-outlined text-[12px]">refresh</span>Retry
+                                </button>
                               </div>
                             ) : null}
                           </div>
