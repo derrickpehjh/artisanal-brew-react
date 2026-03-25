@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
 
 export default function Settings() {
   const { user, beans, brews, stats, signOut, resetAllData } = useApp()
+  const [signingOut, setSigningOut] = useState(false)
+  const [resetting, setResetting] = useState(false)
 
   const meta = user?.user_metadata || {}
   const displayName = meta.full_name || meta.name || 'Brewer'
@@ -20,8 +23,22 @@ export default function Settings() {
 
   async function handleReset() {
     if (confirm('This will permanently delete all your brews and beans. This cannot be undone. Continue?')) {
-      await resetAllData()
-      alert('All data has been reset.')
+      setResetting(true)
+      try {
+        await resetAllData()
+        alert('All data has been reset.')
+      } finally {
+        setResetting(false)
+      }
+    }
+  }
+
+  async function handleSignOut() {
+    setSigningOut(true)
+    try {
+      await signOut()
+    } finally {
+      setSigningOut(false)
     }
   }
 
@@ -51,8 +68,12 @@ export default function Settings() {
                 {isDemo ? 'Demo Account' : 'Google Account'}
               </div>
             </div>
-            <button onClick={signOut} className="shrink-0 flex items-center gap-2 px-5 py-2.5 border border-error/30 text-error rounded-xl text-xs font-bold hover:bg-error-container/30 transition-colors">
-              <span className="material-symbols-outlined text-[16px]">logout</span>Sign Out
+            <button onClick={handleSignOut} disabled={signingOut} className="shrink-0 flex items-center gap-2 px-5 py-2.5 border border-error/30 text-error rounded-xl text-xs font-bold hover:bg-error-container/30 transition-colors disabled:opacity-60">
+              {signingOut ? (
+                <><span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>Signing out…</>
+              ) : (
+                <><span className="material-symbols-outlined text-[16px]">logout</span>Sign Out</>
+              )}
             </button>
           </div>
         </section>
@@ -97,7 +118,11 @@ export default function Settings() {
                   <p className="text-xs text-on-surface-variant">Permanently delete all brews and beans</p>
                 </div>
               </div>
-              <button onClick={handleReset} className="px-4 py-2 bg-error text-white rounded-lg text-xs font-bold hover:opacity-90 transition-colors">Reset</button>
+              <button onClick={handleReset} disabled={resetting} className="px-4 py-2 bg-error text-white rounded-lg text-xs font-bold hover:opacity-90 transition-colors disabled:opacity-60">
+                {resetting ? (
+                  <span className="inline-flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>Resetting…</span>
+                ) : 'Reset'}
+              </button>
             </div>
           </div>
         </section>

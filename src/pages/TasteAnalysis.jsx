@@ -303,7 +303,9 @@ export default function TasteAnalysis() {
                   </div>
                 )}
                 <button onClick={handleSave} disabled={saving} className="w-full brew-gradient text-white py-5 rounded-md font-bold text-xs uppercase tracking-widest shadow-lg hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-60">
-                  {saving ? 'Saving…' : 'Save to History'}
+                  {saving
+                    ? <span className="inline-flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>Saving…</span>
+                    : 'Save to History'}
                 </button>
                 <button onClick={discard} className="w-full bg-surface-container-high text-primary py-5 rounded-md font-bold text-xs uppercase tracking-widest hover:bg-surface-container-highest transition-colors">
                   Discard Session

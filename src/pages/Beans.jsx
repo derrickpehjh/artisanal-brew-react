@@ -522,7 +522,9 @@ export default function Beans() {
                     disabled={deleting}
                     className="w-full bg-error-container/40 py-3 rounded-xl text-error text-sm font-bold hover:bg-error-container/60 transition-colors disabled:opacity-60"
                   >
-                    {deleting ? 'Deleting…' : 'Delete Bean'}
+                    {deleting
+                      ? <span className="inline-flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>Deleting…</span>
+                      : 'Delete Bean'}
                   </button>
                 </div>
               </div>
@@ -674,7 +676,11 @@ export default function Beans() {
               {saveError && <p className="text-xs text-error font-medium">{saveError}</p>}
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-3 bg-surface-container rounded-xl text-on-surface-variant text-sm font-medium hover:bg-surface-container-high transition-colors">Cancel</button>
-                <button type="submit" disabled={saving} className="flex-1 brew-gradient py-3 rounded-xl text-white text-sm font-bold hover:opacity-90 active:scale-95 transition-all disabled:opacity-60">{saving ? 'Saving…' : 'Save Bean'}</button>
+                <button type="submit" disabled={saving} className="flex-1 brew-gradient py-3 rounded-xl text-white text-sm font-bold hover:opacity-90 active:scale-95 transition-all disabled:opacity-60">
+                  {saving
+                    ? <span className="inline-flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>Saving…</span>
+                    : 'Save Bean'}
+                </button>
               </div>
             </form>
           </div>
