@@ -29,14 +29,25 @@ export function AppProvider({ children }) {
       return
     }
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const u = session?.user || null
-      setUser(u)
-      setDataUser(u)
-      if (u) await refresh(u)
-      setLoading(false)
-      setInitialized(true)
-    })
+    const initialize = async () => {
+      try {
+        const timeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Session init timed out')), 10000)
+        )
+        const { data: { session } } = await Promise.race([supabase.auth.getSession(), timeout])
+        const u = session?.user || null
+        setUser(u)
+        setDataUser(u)
+        if (u) await refresh(u)
+      } catch (e) {
+        console.error('App initialization failed:', e)
+      } finally {
+        setLoading(false)
+        setInitialized(true)
+      }
+    }
+
+    initialize()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const u = session?.user || null

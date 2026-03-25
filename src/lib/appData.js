@@ -117,8 +117,8 @@ export async function loadData(user) {
     }
 
     const [{ data: beans, error: beansErr }, { data: brews, error: brewsErr }] = await Promise.all([
-      supabase.from('beans').select('*').eq('user_id', user.id).order('created_at'),
-      supabase.from('brews').select('*').eq('user_id', user.id).order('date', { ascending: false }),
+      withTimeout(supabase.from('beans').select('*').eq('user_id', user.id).order('created_at'), DB_TIMEOUT_MS, 'Loading beans timed out'),
+      withTimeout(supabase.from('brews').select('*').eq('user_id', user.id).order('date', { ascending: false }), DB_TIMEOUT_MS, 'Loading brews timed out'),
     ])
     if (beansErr || brewsErr) throw new Error([beansErr?.message, brewsErr?.message].filter(Boolean).join(' | '))
 
