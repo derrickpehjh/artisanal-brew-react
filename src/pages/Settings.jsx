@@ -44,7 +44,7 @@ export default function Settings() {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto px-10 py-10 space-y-10">
+      <div className="max-w-3xl mx-auto px-4 py-6 md:px-10 md:py-10 space-y-8 md:space-y-10">
         <section className="space-y-1">
           <span className="text-[10px] font-bold tracking-[0.2em] text-on-surface-variant uppercase">Preferences</span>
           <h2 className="font-headline text-5xl font-bold text-primary leading-tight">Settings</h2>
@@ -53,7 +53,7 @@ export default function Settings() {
         {/* Profile */}
         <section className="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_4px_20px_rgba(62,39,35,0.04)]">
           <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-6">Account Profile</h3>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 md:gap-6">
             <div className="w-20 h-20 rounded-full bg-surface-container-highest border-2 border-outline-variant/20 flex items-center justify-center overflow-hidden shrink-0">
               {avatarUrl
                 ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
@@ -81,7 +81,7 @@ export default function Settings() {
         {/* Cellar Summary */}
         <section className="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_4px_20px_rgba(62,39,35,0.04)]">
           <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-6">Cellar Summary</h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-3 md:gap-4">
             {[
               ['Total Brews', stats.totalBrews, 'coffee'],
               ['Avg Rating', stats.avgRating.toFixed(1) + ' / 5', 'star'],

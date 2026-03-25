@@ -295,16 +295,16 @@ export default function Beans() {
 
   return (
     <Layout searchPlaceholder="Search beans..." onSearch={setSearch}>
-      <div className="max-w-[1440px] mx-auto px-10 py-10">
+      <div className="max-w-[1440px] mx-auto px-4 py-6 md:px-10 md:py-10">
         {/* Page header */}
-        <div className="flex items-end justify-between mb-8">
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-6 md:mb-8">
           <div>
             <p className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">Bean Cellar</p>
             <h2 className="font-headline text-3xl text-primary">Your Collection</h2>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             <div className="flex gap-1 bg-surface-container-high rounded-full p-1">
-              {[['all','All'],['low','Low Stock'],['fav','High Rated']].map(([f,label]) => (
+              {[['all','All'],['low','Low Stock'],['fav','Rated']].map(([f,label]) => (
                 <button key={f} onClick={() => setFilter(f)} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${filter===f ? 'bg-surface-container-lowest text-primary shadow-sm' : 'text-on-surface-variant hover:text-primary'}`}>{label}</button>
               ))}
             </div>
@@ -315,7 +315,7 @@ export default function Beans() {
         </div>
 
         {/* Summary bar */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
           {[
             { label:'Beans in Cellar', value:beans.length, icon:'grain', sub:`${activeBean?.name || ''} active`, warn:false },
             { label:'Total Stock', value:`${totalStock}g`, icon:'scale', sub:`across ${beans.length} bean${beans.length!==1?'s':''}`, warn:false },
@@ -344,7 +344,7 @@ export default function Beans() {
             <button onClick={openAdd} className="brew-gradient px-6 py-3 rounded-full text-white text-sm font-bold">Add Your First Bean</button>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             {filteredBeans.map(bean => {
               const isActive = bean.id === activeBean?.id
               const pct = bean.totalGrams ? Math.round((bean.remainingGrams / bean.totalGrams) * 100) : 0

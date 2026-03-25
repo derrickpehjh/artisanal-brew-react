@@ -92,15 +92,15 @@ export default function BrewSetup() {
 
   return (
     <Layout>
-      <div className="max-w-[1440px] mx-auto px-10 py-10 space-y-10">
+      <div className="max-w-[1440px] mx-auto px-4 py-6 md:px-10 md:py-10 space-y-8 md:space-y-10">
         <section className="space-y-1">
           <span className="text-[10px] font-bold tracking-[0.2em] text-on-primary-container uppercase">Phase 01: Configuration</span>
           <h2 className="font-headline text-5xl font-bold text-primary leading-tight">Brew Setup</h2>
         </section>
 
-        <div className="grid grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
           {/* Left: Bean + Method */}
-          <div className="col-span-3 space-y-6">
+          <div className="col-span-1 md:col-span-3 space-y-6">
             <div className="bg-surface-container-lowest p-6 rounded-xl shadow-[0_4px_20px_rgba(62,39,35,0.04)]">
               <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-4">Origin Select</p>
               <div className="relative rounded-lg overflow-hidden mb-4 cursor-pointer group" onClick={() => setShowBeanPicker(true)}>
@@ -133,7 +133,7 @@ export default function BrewSetup() {
           </div>
 
           {/* Center: Parameters */}
-          <div className="col-span-6">
+          <div className="col-span-1 md:col-span-6">
             <div className="bg-surface-container-lowest p-10 rounded-xl shadow-[0_12px_40px_rgba(62,39,35,0.06)] relative overflow-hidden">
               <div className="absolute -right-8 -bottom-8 opacity-[0.03] pointer-events-none select-none">
                 <span className="material-symbols-outlined" style={{fontSize:'280px',fontVariationSettings:"'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 48"}}>coffee</span>
@@ -152,7 +152,7 @@ export default function BrewSetup() {
                   }
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-x-10 gap-y-10">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-8 md:gap-x-10 md:gap-y-10">
                 {/* Dose */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-bold text-on-surface mb-4">
@@ -205,7 +205,7 @@ export default function BrewSetup() {
           </div>
 
           {/* Right: Recipe Summary */}
-          <div className="col-span-3">
+          <div className="col-span-1 md:col-span-3">
             <div className="brew-gradient text-white p-8 rounded-xl relative overflow-hidden flex flex-col gap-8 min-h-[480px]">
               <div className="absolute -right-20 -top-20 w-64 h-64 bg-tertiary-container/20 rounded-full blur-[80px] pointer-events-none"></div>
               <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-container to-primary opacity-40 pointer-events-none"></div>
@@ -237,7 +237,7 @@ export default function BrewSetup() {
         </div>
 
         {/* Footer stats */}
-        <section className="grid grid-cols-4 gap-8 pt-8 border-t border-outline-variant/15">
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-8 pt-8 border-t border-outline-variant/15">
           {[
             { icon:'history', label:'Last brewed', value: lastBrew ? formatDate(lastBrew.date) : 'Never' },
             { icon:'monitoring', label:'Predicted TDS', value: `${(tds*0.9).toFixed(2)}% – ${(tds*1.1).toFixed(2)}%` },
@@ -261,7 +261,7 @@ export default function BrewSetup() {
       {showBeanPicker && (
         <div className="fixed inset-0 z-[100]">
           <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm" onClick={() => setShowBeanPicker(false)}></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface-container-lowest rounded-2xl shadow-2xl w-[480px] max-h-[80vh] overflow-y-auto">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface-container-lowest rounded-2xl shadow-2xl w-[calc(100vw-2rem)] md:w-[480px] max-h-[80vh] overflow-y-auto">
             <div className="p-6 border-b border-outline-variant/15 flex justify-between items-center">
               <h3 className="font-headline text-xl text-primary">Select Bean</h3>
               <button onClick={() => setShowBeanPicker(false)} className="text-on-surface-variant hover:text-primary transition-colors">
@@ -292,7 +292,7 @@ export default function BrewSetup() {
       )}
 
       {/* Tip FAB */}
-      <div className="fixed bottom-10 right-10 z-50">
+      <div className="fixed bottom-20 right-6 md:bottom-10 md:right-10 z-50">
         {showTip && (
           <div className="absolute bottom-16 right-0 bg-surface-container-lowest p-4 rounded-xl shadow-xl border border-outline-variant/15 w-60">
             <p className="text-xs font-bold mb-2 text-primary">Brew Tip</p>

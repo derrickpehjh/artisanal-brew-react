@@ -86,7 +86,7 @@ body {
 
 .param-input {
   font-family: 'Noto Serif', serif;
-  font-size: 4.5rem;
+  font-size: 3rem;
   font-weight: 700;
   line-height: 1;
   color: #271310;
@@ -96,6 +96,11 @@ body {
   width: 100%;
   padding: 0;
   -moz-appearance: textfield;
+}
+@media (min-width: 768px) {
+  .param-input {
+    font-size: 4.5rem;
+  }
 }
 .param-input::-webkit-outer-spin-button,
 .param-input::-webkit-inner-spin-button {
