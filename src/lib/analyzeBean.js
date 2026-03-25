@@ -1,20 +1,32 @@
-function fileToBase64(file) {
+const MAX_IMAGE_PX = 1024
+
+function resizeAndEncodeImage(file) {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result.split(',')[1])
-    reader.onerror = reject
-    reader.readAsDataURL(file)
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const scale = Math.min(1, MAX_IMAGE_PX / Math.max(img.width, img.height))
+      const w = Math.round(img.width * scale)
+      const h = Math.round(img.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+      resolve(canvas.toDataURL('image/jpeg', 0.85).split(',')[1])
+    }
+    img.onerror = reject
+    img.src = url
   })
 }
 
 export async function analyzeBeanImage(imageFiles) {
   const files = Array.isArray(imageFiles) ? imageFiles : [imageFiles]
-  
-  // Convert images to base64 for API
+
   const images = await Promise.all(
     files.map(async (file) => ({
-      mimeType: file.type || 'image/jpeg',
-      data: await fileToBase64(file),
+      mimeType: 'image/jpeg',
+      data: await resizeAndEncodeImage(file),
     }))
   )
 
