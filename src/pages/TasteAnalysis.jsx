@@ -265,11 +265,6 @@ export default function TasteAnalysis() {
                   </div>
                 ) : brewAnalysis ? (
                   <>
-                    {brewAnalysis.isFallback && (
-                      <p className="text-white/40 text-[10px] uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[12px]">wifi_off</span>AI offline — showing smart defaults
-                      </p>
-                    )}
                     <h3 className="font-headline text-2xl leading-snug text-white mb-5">{brewAnalysis.headline}</h3>
                     <p className="text-white/75 text-sm leading-relaxed mb-7">{brewAnalysis.tip}</p>
                   </>
@@ -371,11 +366,6 @@ export default function TasteAnalysis() {
           <div className="bg-surface-container-low p-6 md:p-9 rounded-xl">
             <div className="flex items-center gap-3 mb-4">
               <h4 className="font-headline text-lg italic text-primary">Extraction Analysis</h4>
-              {brewAnalysis?.isFallback && (
-                <span className="text-[10px] font-bold text-on-surface-variant/50 uppercase tracking-widest flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[11px]">wifi_off</span>offline
-                </span>
-              )}
             </div>
             {loadingAnalysis ? (
               <div className="space-y-2 mb-6">
