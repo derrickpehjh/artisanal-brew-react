@@ -3,16 +3,25 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
 import { generateBrewRecipe } from '../lib/aiBrewAssist'
+import { PHASES } from '../lib/appData'
 
 function loadBrewPrefs() {
   try { return JSON.parse(localStorage.getItem('artisanal_brew_prefs') || '{}') } catch { return {} }
 }
 
+// Derive total brew time directly from PHASES so it never drifts from guided brew
+function phasesDuration(method) {
+  const phases = PHASES[method] || PHASES['V60']
+  const secs = phases.reduce((s, p) => s + p.duration, 0)
+  const m = Math.floor(secs / 60), s = secs % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
 const METHODS = [
-  { id:'V60', time:'03:15 min', pattern:'50g bloom + 2 equal pours' },
-  { id:'Chemex', time:'04:30 min', pattern:'60g bloom + 2 equal pours' },
-  { id:'AeroPress', time:'01:30 min', pattern:'Full fill + 30s press' },
-  { id:'French Press', time:'04:30 min', pattern:'50g bloom + full fill, 4min steep' },
+  { id:'V60',          pattern:'Bloom + 35s degas + 2 pours + draw down' },
+  { id:'Chemex',       pattern:'Bloom + 40s degas + 2 pours + draw down' },
+  { id:'AeroPress',    pattern:'Full fill + 1min steep + 30s press' },
+  { id:'French Press', pattern:'Bloom + 30s degas + fill + 4min steep + press' },
 ]
 
 export default function BrewSetup() {
@@ -91,7 +100,7 @@ export default function BrewSetup() {
       dose, water, temp,
       ratio: formatRatio(dose, water),
       grindSize: grind,
-      brewTime: method.time.replace(' min',''),
+      brewTime: phasesDuration(selectedMethod),
       extraction: Number(((dose / water) * 100 * 1.2).toFixed(1)),
     })
     navigate('/guided-brew')
@@ -221,7 +230,7 @@ export default function BrewSetup() {
                 <div className="space-y-4">
                   <div>
                     <p className="text-[10px] opacity-60 uppercase tracking-wide mb-1">Total Brew Time</p>
-                    <p className="font-headline text-xl">{method.time}</p>
+                    <p className="font-headline text-xl">{phasesDuration(selectedMethod)}</p>
                   </div>
                   <div>
                     <p className="text-[10px] opacity-60 uppercase tracking-wide mb-1">Grind Size</p>
