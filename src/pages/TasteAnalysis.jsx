@@ -1,26 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
-import { suggestGrindAdjustment } from '../lib/aiBrewAssist'
+import { suggestGrindAdjustment, getBrewAnalysis } from '../lib/aiBrewAssist'
 
 const DEFAULT_TAGS = ['Balanced','Juicy','Bright','Syrupy','Floral','Earthy','Nutty','Chocolate','Citrus','Caramel']
 
-const AI_SUGGESTIONS = [
-  { minRating:5, headline:'"A masterclass extraction. Nearly flawless."', body:'Your technique is consistent and the parameters are dialled in. Consider logging this as a saved recipe so you can replicate it precisely.' },
-  { minRating:4, tags:['Syrupy','Balanced'], headline:'"The brightness is perfect, but the body could be enhanced."', body:'Based on your tags and rating, try reducing water temperature by 2°C (to {temp-2}°C) and extending the bloom phase by 10 seconds. This will unlock deeper caramel notes without sacrificing juicy acidity.' },
-  { minRating:4, headline:'"Solid extraction — small refinements will elevate this."', body:'Your ratio and time look well-calibrated. Try a slightly coarser grind on the next session to open up more sweetness and reduce any astringency.' },
-  { minRating:3, tags:['Sour','Bright'], headline:'"Signs of under-extraction. The acidity is excessive."', body:'A sour, bright cup at this rating usually indicates under-extraction. Try grinding finer by 1–2 clicks and maintain a slower, more even pour rate during the bloom phase.' },
-  { minRating:3, headline:'"Average cup — worth investigating the variables."', body:'Check your water temperature consistency and grind evenness. A mid-range result often comes from one variable being slightly off. Brew again with the same recipe to isolate the issue.' },
-  { minRating:1, headline:'"This one missed the mark — let\'s troubleshoot."', body:'A low rating often comes from significant extraction issues. Review your grind size, water temperature, and pour technique. Consider starting from a baseline recipe for this bean.' },
-]
-
-const ROASTERS_NOTES = {
-  'V60': 'V60 extractions are sensitive to grind uniformity. Even small inconsistencies in particle size can create channeling during the final drawdown, leading to a thin or bitter finish at the end of the cup.',
-  'Chemex': 'The thick Chemex filter removes most oils and fine particles, producing exceptional clarity. If you detect any muddy flavours, check for tears or improper seating of the filter.',
-  'AeroPress': 'Aeropress gives you enormous flexibility. Your steep time and press speed are the two biggest levers — a longer steep with a slower press produces a more complex, sweeter cup.',
-  'French Press': 'French Press cups often develop a bitterness from 4+ minutes of steep. If you notice harsh finish notes, try a slightly coarser grind and pour off immediately after pressing.',
-}
 
 const SAVE_TIMEOUT_MS = 15000
 
@@ -57,6 +42,32 @@ export default function TasteAnalysis() {
   const [saveError, setSaveError] = useState(null)
   const [grindSuggestion, setGrindSuggestion] = useState(null)
   const [loadingSuggestion, setLoadingSuggestion] = useState(false)
+  const [brewAnalysis, setBrewAnalysis] = useState(null)
+  const [loadingAnalysis, setLoadingAnalysis] = useState(true)
+
+  const runBrewAnalysis = useCallback((currentRating, currentTags) => {
+    setLoadingAnalysis(true)
+    getBrewAnalysis({
+      method: brew?.method || 'V60',
+      dose: brew?.dose || 18,
+      water: brew?.water || 300,
+      temp: brew?.temp || 94,
+      ratio: brew?.ratio,
+      grindSize: brew?.grindSize,
+      extraction: brew?.extraction,
+      rating: currentRating,
+      tasteTags: Array.from(currentTags),
+      beanName: brew?.beanName || bean?.name,
+      beanOrigin: bean?.origin,
+      beanProcess: bean?.process,
+      beanRoastLevel: bean?.roastLevel,
+    })
+      .then(result => setBrewAnalysis(result))
+      .catch(() => setBrewAnalysis(null))
+      .finally(() => setLoadingAnalysis(false))
+  }, [brew, bean])
+
+  useEffect(() => { runBrewAnalysis(rating, tags) }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function toggleTag(tag) {
     setTags(prev => {
@@ -80,14 +91,6 @@ export default function TasteAnalysis() {
     setCustomTagInput('')
     setShowCustomTagInput(false)
   }
-
-  function getAI() {
-    const temp = brew?.temp || 94
-    const suggestion = AI_SUGGESTIONS.find(s => rating >= s.minRating && (!s.tags || s.tags.some(t => tags.has(t)))) || AI_SUGGESTIONS[AI_SUGGESTIONS.length-1]
-    return { ...suggestion, body: suggestion.body.replace('{temp-2}', temp-2) }
-  }
-
-  function getRoastersNotes() { return ROASTERS_NOTES[brew?.method || 'V60'] || ROASTERS_NOTES['V60'] }
 
   function getScores() {
     const dose = brew?.dose || 18, water = brew?.water || 300
@@ -168,7 +171,6 @@ export default function TasteAnalysis() {
     }
   }
 
-  const ai = getAI()
   const scores = getScores()
   const specs = brew ? [
     ['Method', brew.method],
@@ -250,17 +252,37 @@ export default function TasteAnalysis() {
               <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80" alt="Coffee steam" className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay"/>
               <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/70 to-transparent"></div>
               <div className="relative h-full flex flex-col justify-end p-9">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-11 h-11 rounded-full bg-tertiary flex items-center justify-center">
-                    <span className="material-symbols-outlined text-tertiary-fixed text-[20px]" style={{fontVariationSettings:"'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24"}}>auto_awesome</span>
+                <div className="flex items-center justify-between gap-3 mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-tertiary flex items-center justify-center">
+                      <span className="material-symbols-outlined text-tertiary-fixed text-[20px]" style={{fontVariationSettings:"'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24"}}>auto_awesome</span>
+                    </div>
+                    <div>
+                      <h4 className="font-headline text-lg text-white">AI Sommelier</h4>
+                      <p className="text-xs text-on-primary-container">Personalised Brewing Tip</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-headline text-lg text-white">AI Sommelier</h4>
-                    <p className="text-xs text-on-primary-container">Predictive Brewing Tip</p>
-                  </div>
+                  <button onClick={() => runBrewAnalysis(rating, tags)} disabled={loadingAnalysis} className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors disabled:opacity-40" title="Refresh analysis">
+                    <span className={`material-symbols-outlined text-white text-[16px] ${loadingAnalysis ? 'animate-spin' : ''}`}>refresh</span>
+                  </button>
                 </div>
-                <h3 className="font-headline text-2xl leading-snug text-white mb-5">{ai.headline}</h3>
-                <p className="text-white/75 text-sm leading-relaxed mb-7">{ai.body}</p>
+                {loadingAnalysis ? (
+                  <div className="flex-1 flex flex-col justify-end gap-3 mb-7">
+                    <div className="h-7 bg-white/20 rounded animate-pulse w-4/5"></div>
+                    <div className="h-4 bg-white/15 rounded animate-pulse w-full"></div>
+                    <div className="h-4 bg-white/15 rounded animate-pulse w-3/4"></div>
+                    <div className="h-4 bg-white/15 rounded animate-pulse w-5/6"></div>
+                  </div>
+                ) : brewAnalysis ? (
+                  <>
+                    <h3 className="font-headline text-2xl leading-snug text-white mb-5">{brewAnalysis.headline}</h3>
+                    <p className="text-white/75 text-sm leading-relaxed mb-7">{brewAnalysis.tip}</p>
+                  </>
+                ) : (
+                  <div className="mb-7">
+                    <p className="text-white/60 text-sm italic">Could not load analysis. Tap refresh to try again.</p>
+                  </div>
+                )}
                 <button onClick={applyToNext} className="w-full py-4 bg-white text-primary font-bold rounded-md hover:bg-surface-bright transition-colors text-xs uppercase tracking-widest">
                   Apply to Next Brew
                 </button>
@@ -353,8 +375,18 @@ export default function TasteAnalysis() {
           <h3 className="font-headline text-2xl font-bold text-primary border-l-4 border-primary-container pl-5">Deep Extraction Analysis</h3>
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
             <div className="col-span-1 md:col-span-7 bg-surface-container-low p-6 md:p-9 rounded-xl">
-              <h4 className="font-headline text-lg mb-4 italic text-primary">The Roaster's Notes</h4>
-              <p className="text-on-surface-variant leading-relaxed text-sm mb-6">{getRoastersNotes()}</p>
+              <h4 className="font-headline text-lg mb-4 italic text-primary">Extraction Analysis</h4>
+              {loadingAnalysis ? (
+                <div className="space-y-2 mb-6">
+                  <div className="h-4 bg-surface-container rounded animate-pulse w-full"></div>
+                  <div className="h-4 bg-surface-container rounded animate-pulse w-5/6"></div>
+                  <div className="h-4 bg-surface-container rounded animate-pulse w-4/5"></div>
+                </div>
+              ) : (
+                <p className="text-on-surface-variant leading-relaxed text-sm mb-6">
+                  {brewAnalysis?.extractionNote || 'No extraction analysis available.'}
+                </p>
+              )}
               <button onClick={() => document.querySelector('textarea')?.focus()} className="flex items-center gap-3 group">
                 <div className="w-9 h-9 bg-primary-container rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform">
                   <span className="material-symbols-outlined text-[16px]">edit_note</span>

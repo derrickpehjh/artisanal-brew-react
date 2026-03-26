@@ -56,6 +56,24 @@ Return ONLY this JSON (method must be exactly one of: V60, Chemex, AeroPress, Fr
   return parseJSON(text)
 }
 
+// Feature 2b: post-brew sommelier analysis + extraction note
+export async function getBrewAnalysis({ method, dose, water, temp, ratio, grindSize, extraction, rating, tasteTags, beanName, beanOrigin, beanProcess, beanRoastLevel }) {
+  const text = await callGemini(`You are a specialty coffee sommelier and extraction expert. Analyse this brew session:
+
+Bean: ${beanName || 'Unknown'}${beanOrigin ? ` (${beanOrigin})` : ''}${beanProcess ? `, ${beanProcess} process` : ''}${beanRoastLevel ? `, ${beanRoastLevel} roast` : ''}
+Method: ${method}, Dose: ${dose}g / Water: ${water}g${ratio ? ` (${ratio})` : ''}, Temp: ${temp}°C
+Grind: ${grindSize || 'unknown'}, Est. extraction: ${extraction || '?'}%
+Rating: ${rating}/5, Taste tags: ${(tasteTags||[]).join(', ') || 'none'}
+
+Return ONLY this JSON:
+{
+  "headline": "A punchy one-liner verdict on this brew in double-quotes, max 12 words",
+  "tip": "2-3 sentences: acknowledge what worked well, then give one specific parameter adjustment for the next session",
+  "extractionNote": "2-3 sentences of technical analysis: how this method and these parameters interacted, and what the taste tags reveal about the extraction yield"
+}`)
+  return parseJSON(text)
+}
+
 // Feature 3: freshness assessment (pure JS, no AI)
 export function assessFreshness(roastDateStr) {
   if (!roastDateStr) return null
