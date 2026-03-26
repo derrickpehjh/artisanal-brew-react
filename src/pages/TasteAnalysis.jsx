@@ -92,15 +92,6 @@ export default function TasteAnalysis() {
     setShowCustomTagInput(false)
   }
 
-  function getScores() {
-    const dose = brew?.dose || 18, water = brew?.water || 300
-    const acidity = Math.min(5, Math.max(1, 6 - rating + (tags.has('Bright') || tags.has('Sour') ? 1 : 0)))
-    const body = Math.min(5, Math.max(1, rating - (tags.has('Thin') ? 1 : 0) + (tags.has('Syrupy') || tags.has('Rich Body') ? 1 : 0)))
-    const complexity = Math.round((rating + (tags.size > 3 ? 1 : 0)) / 2 * 10) / 10
-    const finish = Math.round(((rating + body) / 2) * 10) / 10
-    return { acidity, body, complexity, finish }
-  }
-
   async function handleSave() {
     if (!brew && !confirm('No active brew session. Save a demo entry?')) return
     setSaving(true)
@@ -171,7 +162,6 @@ export default function TasteAnalysis() {
     }
   }
 
-  const scores = getScores()
   const specs = brew ? [
     ['Method', brew.method],
     ['Ratio', brew.ratio || formatRatio(brew.dose, brew.water)],
@@ -378,47 +368,32 @@ export default function TasteAnalysis() {
         {/* Deep analysis */}
         <section className="space-y-6">
           <h3 className="font-headline text-2xl font-bold text-primary border-l-4 border-primary-container pl-5">Deep Extraction Analysis</h3>
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
-            <div className="col-span-1 md:col-span-7 bg-surface-container-low p-6 md:p-9 rounded-xl">
-              <div className="flex items-center gap-3 mb-4">
-                <h4 className="font-headline text-lg italic text-primary">Extraction Analysis</h4>
-                {brewAnalysis?.isFallback && (
-                  <span className="text-[10px] font-bold text-on-surface-variant/50 uppercase tracking-widest flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[11px]">wifi_off</span>offline
-                  </span>
-                )}
-              </div>
-              {loadingAnalysis ? (
-                <div className="space-y-2 mb-6">
-                  <div className="h-4 bg-surface-container rounded animate-pulse w-full"></div>
-                  <div className="h-4 bg-surface-container rounded animate-pulse w-5/6"></div>
-                  <div className="h-4 bg-surface-container rounded animate-pulse w-4/5"></div>
-                </div>
-              ) : (
-                <p className="text-on-surface-variant leading-relaxed text-sm mb-6">
-                  {brewAnalysis?.extractionNote || 'No extraction analysis available.'}
-                </p>
+          <div className="bg-surface-container-low p-6 md:p-9 rounded-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <h4 className="font-headline text-lg italic text-primary">Extraction Analysis</h4>
+              {brewAnalysis?.isFallback && (
+                <span className="text-[10px] font-bold text-on-surface-variant/50 uppercase tracking-widest flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[11px]">wifi_off</span>offline
+                </span>
               )}
-              <button onClick={() => document.querySelector('textarea')?.focus()} className="flex items-center gap-3 group">
-                <div className="w-9 h-9 bg-primary-container rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-[16px]">edit_note</span>
-                </div>
-                <span className="text-xs font-bold text-primary uppercase tracking-widest">Add personal tasting notes…</span>
-              </button>
             </div>
-            <div className="col-span-1 md:col-span-5 grid grid-cols-2 gap-4">
-              {[
-                ['Acidity', scores.acidity.toFixed(1), 'border-tertiary', 'text-tertiary'],
-                ['Body', scores.body.toFixed(1), 'border-primary-container', 'text-primary'],
-                ['Complexity', scores.complexity.toFixed(1), 'border-outline', 'text-on-surface-variant'],
-                ['Finish', scores.finish.toFixed(1), 'border-primary', 'text-primary'],
-              ].map(([l,v,border,color]) => (
-                <div key={l} className={`bg-surface-container-lowest p-6 rounded-xl text-center border-b-2 ${border} shadow-[0_4px_20px_rgba(62,39,35,0.04)]`}>
-                  <p className="text-[10px] font-bold text-on-surface-variant uppercase mb-2">{l}</p>
-                  <p className={`font-headline text-4xl font-bold ${color}`}>{v}</p>
-                </div>
-              ))}
-            </div>
+            {loadingAnalysis ? (
+              <div className="space-y-2 mb-6">
+                <div className="h-4 bg-surface-container rounded animate-pulse w-full"></div>
+                <div className="h-4 bg-surface-container rounded animate-pulse w-5/6"></div>
+                <div className="h-4 bg-surface-container rounded animate-pulse w-4/5"></div>
+              </div>
+            ) : (
+              <p className="text-on-surface-variant leading-relaxed text-sm mb-6">
+                {brewAnalysis?.extractionNote || 'No extraction analysis available.'}
+              </p>
+            )}
+            <button onClick={() => document.querySelector('textarea')?.focus()} className="flex items-center gap-3 group">
+              <div className="w-9 h-9 bg-primary-container rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                <span className="material-symbols-outlined text-[16px]">edit_note</span>
+              </div>
+              <span className="text-xs font-bold text-primary uppercase tracking-widest">Add personal tasting notes…</span>
+            </button>
           </div>
         </section>
       </div>
