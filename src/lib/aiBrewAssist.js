@@ -1,17 +1,26 @@
+const GEMINI_TIMEOUT_MS = 8000
+
 // Shared Gemini caller
 async function callGemini(prompt) {
-  const response = await fetch('/api/gemini', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt }),
-  })
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({}))
-    const message = payload?.error || `Gemini proxy error ${response.status}`
-    throw new Error(message)
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS)
+  try {
+    const response = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+      signal: controller.signal,
+    })
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}))
+      const message = payload?.error || `Gemini proxy error ${response.status}`
+      throw new Error(message)
+    }
+    const data = await response.json()
+    return data?.text || null
+  } finally {
+    clearTimeout(timer)
   }
-  const data = await response.json()
-  return data?.text || null
 }
 
 function parseJSON(text) {
