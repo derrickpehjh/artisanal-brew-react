@@ -6,7 +6,7 @@ A specialty coffee brewing tracker. Log brews, manage your bean cellar, follow g
 
 - **Bean Cellar** — track your coffee beans with stock levels, roast details, and tasting notes. Upload photos of the bag and let AI auto-fill the details in any language.
 - **Guided Brew** — step-by-step brew timer with phase arc for V60, Chemex, AeroPress, and French Press.
-- **Taste Analysis** — rate your cup, tag flavour notes, and get AI sommelier suggestions.
+- **Taste Analysis** — rate your cup, tag flavour notes, and get AI sommelier suggestions with extraction analysis. Falls back to rule-based insights when the AI is unavailable.
 - **Analytics** — SVG chart of rating vs extraction over time, best brews gallery, brew history feed.
 - **Recipes** — replicate your best brews or try community classics with one click.
 - **Settings** — export your data as JSON or reset your cellar.
@@ -39,7 +39,8 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_KEY=your_supabase_publishable_key
 
 # Google Gemini (free) — https://aistudio.google.com/app/apikey
-VITE_GEMINI_API_KEY=your_gemini_api_key
+# No VITE_ prefix — this key is only read server-side by Vercel functions
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
 ### 3. Set up Supabase

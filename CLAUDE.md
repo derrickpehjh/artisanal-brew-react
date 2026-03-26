@@ -57,7 +57,7 @@ artisanal-brew-react/
 │   │   ├── Beans.jsx           # Bean cellar: add/edit/delete + AI scan
 │   │   ├── BrewSetup.jsx       # New brew form (dose, water, grind, method)
 │   │   ├── GuidedBrew.jsx      # Step-by-step brew timer with phases
-│   │   ├── TasteAnalysis.jsx   # Post-brew rating, taste tags, AI tips
+│   │   ├── TasteAnalysis.jsx   # Post-brew rating, taste tags, AI sommelier + extraction analysis (offline fallback)
 │   │   ├── Analytics.jsx       # Stats, SVG charts, brew history
 │   │   ├── Recipes.jsx         # Browse/generate brew recipes
 │   │   └── Settings.jsx        # Export data, reset, preferences
@@ -173,6 +173,16 @@ Client-side wrappers are in:
 - `src/lib/analyzeBean.js` — Sends base64 bean images for OCR extraction
 - `src/lib/aiBrewAssist.js` — Builds prompts for brew optimization tips
 
+#### AI Fallback Behaviour
+
+All Gemini calls in `aiBrewAssist.js` use an **8-second `AbortController` timeout**. If the model is rate-limited, slow, or unreachable, the request is cancelled and a **rule-based fallback** is returned instead of an error. Fallback results carry `isFallback: true` so the UI can surface a subtle offline indicator.
+
+Fallback functions:
+- `getFallbackBrewAnalysis()` — derives `headline`, `tip`, and `extractionNote` from taste tags and extraction %. Detects under-extraction (sour/bright/thin tags or `extraction < 18`) and over-extraction (bitter/astringent tags or `extraction > 24`).
+- `getFallbackGrindSuggestion()` — uses the same tag/extraction logic to produce a `direction`/`amount`/`reasoning`/`tip` object matching the grind card shape.
+
+When adding a new AI feature, follow the same pattern: wrap the `callGemini` call in `try/catch` and return a meaningful hardcoded fallback.
+
 ### Authentication
 
 - **Google OAuth** via Supabase Auth
@@ -243,6 +253,7 @@ Defined in `index.css`:
 1. Add client-side prompt building logic to `src/lib/aiBrewAssist.js` (or a new lib file)
 2. Call `POST /api/gemini` (text) or `POST /api/gemini-image` (vision) via `fetch`
 3. Do NOT add new backend routes; use the existing Vercel functions
+4. Wrap the `callGemini` call in `try/catch` and return a rule-based fallback — `callGemini` already applies the 8-second timeout via `AbortController`
 
 ### Adding a New Data Field
 1. Update the DB schema in Supabase (add column to `beans` or `brews` table)
