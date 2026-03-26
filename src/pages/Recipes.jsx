@@ -53,7 +53,7 @@ function RecipeCard({ recipe, idx, canReplicate, onUse }) {
         </div>
         {recipe.notes && <p className="text-xs text-on-surface-variant italic leading-relaxed border-l-2 border-outline-variant/30 pl-3">{recipe.notes}</p>}
         <div className="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/10">
-          {[['Grind',recipe.grindSize||'—'],['Time',recipe.brewTime||'—'],['Temp',recipe.temp+'°C']].map(([l,v]) => (
+          {[['Grind',recipe.grindSize||'—'],['Time',phasesDuration(recipe.method)],['Temp',recipe.temp+'°C']].map(([l,v]) => (
             <div key={l} className="text-center">
               <p className="text-[9px] text-on-surface-variant uppercase font-bold mb-0.5">{l}</p>
               <p className="text-xs font-bold text-primary">{v}</p>
