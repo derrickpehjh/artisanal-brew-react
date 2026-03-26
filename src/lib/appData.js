@@ -361,7 +361,7 @@ export const PHASES = {
   'French Press': [
     {name:'Bloom Pour',icon:'water_drop',targetWater:60,duration:15,instruction:'Add the bloom water and gently stir to fully saturate all the grounds.'},
     {name:'Bloom Rest',icon:'hourglass_top',targetWater:60,duration:30,instruction:'Wait for the grounds to degas before adding the rest of the water.'},
-    {name:'Fill',icon:'water_drop',targetWater:500,duration:30,instruction:'Fill to the target. Place the lid on top (plunger up) without pressing down.'},
+    {name:'Fill',icon:'water_drop',targetWater:500,duration:60,instruction:'Fill to the target. Place the lid on top (plunger up) without pressing down.'},
     {name:'Steep',icon:'hourglass_bottom',targetWater:0,duration:240,instruction:'Wait 4 full minutes. Resist the urge to stir — it causes over-extraction.'},
     {name:'Press & Pour',icon:'compress',targetWater:0,duration:30,instruction:'Press the plunger down slowly and evenly, then pour immediately to stop extraction.'},
   ],

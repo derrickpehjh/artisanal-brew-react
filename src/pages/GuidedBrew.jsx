@@ -122,8 +122,8 @@ export default function GuidedBrew() {
   const pouredClamped = Math.min(poured, ph.targetWater || prevCumulative)
   const weightBarPct = Math.min((pouredClamped / (brew.water || 300)) * 100, 100)
 
-  const remaining = phases.slice(currentPhase).reduce((s, p) => s + p.duration, 0)
-  const estCompletion = formatTime(totalSecs + remaining)
+  const totalDuration = phases.reduce((s, p) => s + p.duration, 0)
+  const timeRemaining = Math.max(0, totalDuration - totalSecs)
 
   return (
     <div className="bg-background text-on-background overflow-hidden">
@@ -227,7 +227,9 @@ export default function GuidedBrew() {
                 <span>{pouredClamped}g poured</span>
                 {ph.targetWater > 0 && phaseIncrement > 0
                   ? <span>pour to <span className="text-primary">{ph.targetWater}g</span></span>
-                  : <span>{Math.max(0, (brew.water || 300) - pouredClamped)}g remaining</span>
+                  : phaseIncrement === 0 && ph.targetWater > 0
+                    ? <span className="text-on-surface-variant/60">don't pour — wait</span>
+                    : <span>{Math.max(0, (brew.water || 300) - pouredClamped)}g remaining</span>
                 }
               </div>
             </div>
@@ -252,7 +254,7 @@ export default function GuidedBrew() {
                 <div className="pt-3">
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-tertiary-fixed rounded-full text-on-tertiary-fixed text-[11px] font-bold uppercase tracking-wider">
                     <span className="material-symbols-outlined text-[14px]">info</span>
-                    <span>Next: {nextPh.name}{nextPh.targetWater ? ` (${nextPh.targetWater}g)` : ''}</span>
+                    <span>Next: {nextPh.name}{nextPh.targetWater > ph.targetWater ? ` → ${nextPh.targetWater}g` : ''}</span>
                   </div>
                 </div>
               )}
@@ -328,8 +330,8 @@ export default function GuidedBrew() {
           </div>
           <div className="flex items-center gap-3 md:gap-5">
             <div className="text-right hidden md:block">
-              <p className="text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mb-0.5">Est. Completion</p>
-              <p className="font-headline text-primary font-bold">{estCompletion}</p>
+              <p className="text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mb-0.5">Remaining</p>
+              <p className="font-headline text-primary font-bold">{formatTime(timeRemaining)}</p>
             </div>
             <div className="h-7 w-px bg-outline-variant/25 hidden md:block"></div>
             <button onClick={showBrewSettings} className="w-11 h-11 flex items-center justify-center rounded-full bg-surface-container-high text-on-surface hover:bg-surface-container-highest transition-colors active:scale-95">
