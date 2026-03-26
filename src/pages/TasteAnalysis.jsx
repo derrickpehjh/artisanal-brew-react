@@ -67,7 +67,10 @@ export default function TasteAnalysis() {
       .finally(() => setLoadingAnalysis(false))
   }, [brew, bean])
 
-  useEffect(() => { runBrewAnalysis(rating, tags) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const timer = setTimeout(() => runBrewAnalysis(rating, tags), 600)
+    return () => clearTimeout(timer)
+  }, [rating, tags, runBrewAnalysis])
 
   function toggleTag(tag) {
     setTags(prev => {
