@@ -609,20 +609,22 @@ export default function Beans() {
 
                   {/* Scan button + feedback */}
                   {scanImages.length > 0 && (
-                    <div className="flex items-center gap-3 mt-2">
-                      <button
-                        type="button"
-                        onClick={handleAIScan}
-                        disabled={scanning}
-                        className="brew-gradient text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 hover:opacity-90 disabled:opacity-60 transition-all"
-                      >
-                        {scanning ? (
-                          <><span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>Analysing…</>
-                        ) : (
-                          <><span className="material-symbols-outlined text-[16px]" style={{fontVariationSettings:"'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24"}}>auto_awesome</span>Auto-fill with AI</>
-                        )}
-                      </button>
-                      <span className="text-[10px] text-on-surface-variant">{scanImages.length} photo{scanImages.length !== 1 ? 's' : ''} selected</span>
+                    <div className="mt-2 flex flex-col gap-1.5">
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={handleAIScan}
+                          disabled={scanning}
+                          className="brew-gradient text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center gap-2 hover:opacity-90 disabled:opacity-60 transition-all"
+                        >
+                          {scanning ? (
+                            <><span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>Analysing…</>
+                          ) : (
+                            <><span className="material-symbols-outlined text-[16px]" style={{fontVariationSettings:"'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24"}}>auto_awesome</span>Auto-fill with AI</>
+                          )}
+                        </button>
+                        <span className="text-[10px] text-on-surface-variant">{scanImages.length} photo{scanImages.length !== 1 ? 's' : ''} selected</span>
+                      </div>
                       {aiFilledFields.size > 0 && (
                         <p className="text-[10px] text-tertiary font-bold flex items-center gap-1">
                           <span className="material-symbols-outlined text-[13px]" style={{fontVariationSettings:"'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24"}}>check_circle</span>
