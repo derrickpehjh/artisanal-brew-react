@@ -1,4 +1,4 @@
-const GEMINI_MODEL = 'gemini-2.0-flash'
+const GEMINI_MODEL = 'gemini-2.5-flash-lite'
 const RETRY_DELAYS_MS = [5000, 15000, 30000]
 
 async function callGemini(apiKey, body) {
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
   try {
     const response = await callGemini(apiKey, {
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.3 },
+      generationConfig: { temperature: 0.3, maxOutputTokens: 512 },
     })
 
     if (!response.ok) {
