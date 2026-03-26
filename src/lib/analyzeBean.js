@@ -89,7 +89,8 @@ export async function analyzeBeanImage(imageFiles) {
   const prompt = `You are a coffee expert and OCR specialist. Analyse ${files.length > 1 ? 'these coffee bean bag images (different angles of the same bag)' : 'this coffee bean bag image'}. The bag may be printed in ANY language (Japanese, Korean, Chinese, Arabic, Thai, etc.) — read all text carefully and translate everything to English. Use all provided images together to fill in as many fields as possible.
 
 For process: read every part of the label — including the product name — and use your coffee knowledge to identify the processing method in any language. It may be stated explicitly (e.g. "washed", "natural", "honey", "anaerobic", "水洗", "日晒", "厭氧") or embedded in the product name. Translate and return it in English (e.g. "Double Anaerobic", "Washed Process", "Natural Process"). Only return null if there is genuinely no process information anywhere on the label.
-For roastDate: look for any date near words like "roast", "焙煎", "로스팅", "烘焙", "torréfaction", "geröstet", or any date-like number sequence (DD/MM/YYYY, YYYY.MM.DD, etc.).
+For roastLevel: use your coffee knowledge to identify the roast level in any language and map it to exactly one of: Light, Light-Medium, Medium, Medium-Dark, Dark. Examples: 淺焙 → Light, 中淺焙 → Light-Medium, 中焙 → Medium, 中深焙 → Medium-Dark, 深焙 → Dark.
+For roastDate: look for any date near words like "roast", "焙煎", "烘焙日", "로스팅", "烘焙", "torréfaction", "geröstet", or any date-like number sequence (DD/MM/YYYY, YYYY.MM.DD, etc.).
 For totalGrams: look for a weight near "g", "gr", "gram", "oz", "net weight", "内容量", "중량", or any number followed by a weight unit. Convert oz to grams if needed (1 oz = 28.35g). Return as a plain number (e.g. 250).
 
 Return ONLY a valid JSON object with these exact fields (use null for any you cannot determine):
