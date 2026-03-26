@@ -86,22 +86,17 @@ export async function analyzeBeanImage(imageFiles) {
     }))
   )
 
-  const prompt = `You are a coffee expert and OCR specialist. Analyse ${files.length > 1 ? 'these coffee bean bag images (different angles of the same bag)' : 'this coffee bean bag image'}. The bag may be printed in ANY language (Japanese, Korean, Chinese, Arabic, Thai, etc.) — read all text carefully and translate everything to English. Use all provided images together to fill in as many fields as possible.
-
-For process: read every part of the label — including the product name — and use your coffee knowledge to identify the processing method in any language. It may be stated explicitly (e.g. "washed", "natural", "honey", "anaerobic", "水洗", "日晒", "厭氧") or embedded in the product name. Translate and return it in English (e.g. "Double Anaerobic", "Washed Process", "Natural Process"). Only return null if there is genuinely no process information anywhere on the label.
-For roastLevel: use your coffee knowledge to identify the roast level in any language and map it to exactly one of: Light, Light-Medium, Medium, Medium-Dark, Dark. Examples: 淺焙 → Light, 中淺焙 → Light-Medium, 中焙 → Medium, 中深焙 → Medium-Dark, 深焙 → Dark.
-For roastDate: look for any date near words like "roast", "焙煎", "烘焙日", "로스팅", "烘焙", "torréfaction", "geröstet", or any date-like number sequence (DD/MM/YYYY, YYYY.MM.DD, etc.).
-For totalGrams: look for a weight near "g", "gr", "gram", "oz", "net weight", "内容量", "중량", or any number followed by a weight unit. Convert oz to grams if needed (1 oz = 28.35g). Return as a plain number (e.g. 250).
+  const prompt = `You are a coffee expert and OCR specialist. Analyse ${files.length > 1 ? 'these coffee bean bag images (different angles of the same bag)' : 'this coffee bean bag image'}. The label may be in any language — read all text, apply your coffee knowledge, and extract the fields below. Translate everything to English.
 
 Return ONLY a valid JSON object with these exact fields (use null for any you cannot determine):
 {
-  "name": "Full bean name, e.g. 'Ethiopia Yirgacheffe' or 'Colombia Huila El Paraiso'",
+  "name": "Full bean name including any variety or farm",
   "origin": "Country or region of origin",
-  "process": "Processing method, e.g. 'Washed Process', 'Natural Process', 'Honey Process'",
+  "process": "Processing method in English (e.g. 'Washed', 'Natural', 'Honey', 'Double Anaerobic'). Check the entire label including the product name — it is often embedded there.",
   "roastLevel": "Exactly one of: Light, Light-Medium, Medium, Medium-Dark, Dark",
-  "roastDate": "Roast date in YYYY-MM-DD format (e.g. '2024-10-12'). Convert from whatever format is printed. If only month and year are visible, use the 1st of that month (e.g. '2024-10-01').",
+  "roastDate": "Roast date in YYYY-MM-DD format. If only month and year are visible use the 1st of that month.",
   "totalGrams": 250,
-  "notes": "Tasting notes or flavour descriptors from the bag, translated to English and written as a short sentence"
+  "notes": "Tasting notes or flavour descriptors translated to English as a short sentence"
 }
 
 Return only the JSON object. No explanation, no markdown, no code block.`
