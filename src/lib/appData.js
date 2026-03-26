@@ -341,23 +341,26 @@ export function buildChartPath(brews, days=30, svgW=480, svgH=180) {
 
 export const PHASES = {
   'V60': [
-    {name:'Bloom Phase',icon:'water_drop',targetWater:40,duration:30,instruction:'Pour 40g of water in a slow spiral motion starting from the center. Wait for the grounds to bloom and degas fully.'},
+    {name:'Bloom Pour',icon:'water_drop',targetWater:40,duration:15,instruction:'Pour 40g in a slow spiral from centre outward, fully saturating all the grounds.'},
+    {name:'Bloom Rest',icon:'hourglass_top',targetWater:40,duration:35,instruction:'Set the kettle down and wait. CO₂ bubbling out is normal — let the bed degas completely before the next pour.'},
     {name:'First Pour',icon:'water_drop',targetWater:120,duration:45,instruction:'Pour steadily to 120g total in slow concentric circles. Maintain gentle, even saturation across all grounds.'},
-    {name:'Second Pour',icon:'water_drop',targetWater:220,duration:45,instruction:'Continue pouring to reach 220g total. Keep the stream slow and steady, working from the center outward.'},
-    {name:'Draw Down',icon:'hourglass_bottom',targetWater:0,duration:75,instruction:'Allow the brew to fully drain. Do not disturb the bed. Total brew time should be ~3:15.'},
+    {name:'Second Pour',icon:'water_drop',targetWater:220,duration:45,instruction:'Continue pouring to reach 220g total. Keep the stream slow and steady, working from the centre outward.'},
+    {name:'Draw Down',icon:'hourglass_bottom',targetWater:0,duration:75,instruction:'Allow the brew to fully drain. Do not disturb the bed. Total brew time should be ~3:30.'},
   ],
   'Chemex': [
-    {name:'Bloom Phase',icon:'water_drop',targetWater:60,duration:45,instruction:'Pre-wet the filter, then pour 60g in a spiral motion. Allow 45 seconds to bloom.'},
+    {name:'Bloom Pour',icon:'water_drop',targetWater:60,duration:20,instruction:'Pre-wet the filter, then pour 60g in a slow spiral motion, saturating all grounds evenly.'},
+    {name:'Bloom Rest',icon:'hourglass_top',targetWater:60,duration:40,instruction:'Wait for the grounds to degas. You will see the crust rise and CO₂ escape — this unlocks clarity in the cup.'},
     {name:'First Pour',icon:'water_drop',targetWater:200,duration:60,instruction:'Pour slowly to 200g total. Do not disturb the coffee crust. The Chemex requires patience.'},
     {name:'Final Pour',icon:'water_drop',targetWater:400,duration:60,instruction:'Add remaining water to reach 400g total. Pour from high for clarity.'},
-    {name:'Draw Down',icon:'hourglass_bottom',targetWater:0,duration:120,instruction:'Allow the full draw down. Total time ~4:30. Do not squeeze or disturb the filter.'},
+    {name:'Draw Down',icon:'hourglass_bottom',targetWater:0,duration:120,instruction:'Allow the full draw down. Total time ~5:00. Do not squeeze or disturb the filter.'},
   ],
   'AeroPress': [
     {name:'Fill & Steep',icon:'water_drop',targetWater:200,duration:60,instruction:'Add all 200g of water. Stir 3 times vigorously to saturate all grounds. Place cap on top to retain heat.'},
     {name:'Press',icon:'compress',targetWater:0,duration:30,instruction:'Press slowly and evenly for 20–30 seconds. Stop pressing when you hear the hiss. Total time ~1:30.'},
   ],
   'French Press': [
-    {name:'Bloom',icon:'water_drop',targetWater:60,duration:30,instruction:'Add 60g of water to fully saturate the grounds. Wait 30 seconds for the bloom.'},
+    {name:'Bloom Pour',icon:'water_drop',targetWater:60,duration:15,instruction:'Add 60g of water and gently stir to fully saturate all the grounds.'},
+    {name:'Bloom Rest',icon:'hourglass_top',targetWater:60,duration:30,instruction:'Wait 30 seconds for the grounds to degas before adding the rest of the water.'},
     {name:'Fill',icon:'water_drop',targetWater:500,duration:30,instruction:'Fill to 500g total. Place the lid on top (plunger up) without pressing down.'},
     {name:'Steep',icon:'hourglass_bottom',targetWater:0,duration:240,instruction:'Wait 4 full minutes. Resist the urge to stir — it causes over-extraction.'},
     {name:'Press & Pour',icon:'compress',targetWater:0,duration:30,instruction:'Press the plunger down slowly and evenly, then pour immediately to stop extraction.'},
