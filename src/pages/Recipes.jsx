@@ -3,6 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
 import { Link } from 'react-router-dom'
+import { PHASES } from '../lib/appData'
+
+function phasesDuration(method) {
+  const phases = PHASES[method] || PHASES['V60']
+  const secs = phases.reduce((s, p) => s + p.duration, 0)
+  const m = Math.floor(secs / 60), s = secs % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
 
 const IMAGES = [
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&q=80',
@@ -12,9 +20,9 @@ const IMAGES = [
 ]
 
 const COMMUNITY = [
-  { method:'V60', beanName:'Ethiopia Yirgacheffe', dose:18, water:300, temp:93, ratio:'1:16.7', grindSize:'24 clicks', brewTime:'3:15', rating:5, tasteTags:['Floral','Juicy','Bright'], notes:'A clean, crisp extraction highlighting jasmine and citrus.' },
-  { method:'Chemex', beanName:'Kenya Nyeri', dose:25, water:400, temp:95, ratio:'1:16', grindSize:'Medium-Coarse', brewTime:'4:30', rating:5, tasteTags:['Berry','Bright','Complex'], notes:'Outstanding clarity. Let the thick filter do its work.' },
-  { method:'AeroPress', beanName:'Colombia Huila', dose:18, water:250, temp:93, ratio:'1:13.9', grindSize:'Medium', brewTime:'1:30', rating:4, tasteTags:['Balanced','Caramel','Smooth'], notes:'Fast, concentrated extraction with honey sweetness.' },
+  { method:'V60', beanName:'Ethiopia Yirgacheffe', dose:18, water:300, temp:93, ratio:'1:16.7', grindSize:'24 clicks', brewTime:phasesDuration('V60'), rating:5, tasteTags:['Floral','Juicy','Bright'], notes:'A clean, crisp extraction highlighting jasmine and citrus.' },
+  { method:'Chemex', beanName:'Kenya Nyeri', dose:25, water:400, temp:95, ratio:'1:16', grindSize:'Medium-Coarse', brewTime:phasesDuration('Chemex'), rating:5, tasteTags:['Berry','Bright','Complex'], notes:'Outstanding clarity. Let the thick filter do its work.' },
+  { method:'AeroPress', beanName:'Colombia Huila', dose:18, water:250, temp:93, ratio:'1:13.9', grindSize:'Medium', brewTime:phasesDuration('AeroPress'), rating:4, tasteTags:['Balanced','Caramel','Smooth'], notes:'Fast, concentrated extraction with honey sweetness.' },
 ]
 
 function Stars({ rating }) {
