@@ -215,8 +215,8 @@ export default function GuidedBrew() {
                 <div className="text-right">
                   <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-1 font-bold">Target</p>
                   <div className="flex items-baseline gap-1 justify-end">
-                    <span className="font-headline text-3xl font-medium text-on-surface-variant leading-none">{ph.targetWater > 0 ? ph.targetWater : '—'}</span>
-                    {ph.targetWater > 0 && <span className="text-sm text-on-surface-variant">g</span>}
+                    <span className="font-headline text-3xl font-medium text-on-surface-variant leading-none">{brew.water}</span>
+                    <span className="text-sm text-on-surface-variant">g</span>
                   </div>
                 </div>
               </div>
@@ -225,7 +225,10 @@ export default function GuidedBrew() {
               </div>
               <div className="flex justify-between mt-2 text-[10px] text-on-surface-variant font-bold">
                 <span>{pouredClamped}g poured</span>
-                <span>{Math.max(0, (brew.water || 300) - pouredClamped)}g remaining</span>
+                {ph.targetWater > 0 && phaseIncrement > 0
+                  ? <span>pour to <span className="text-primary">{ph.targetWater}g</span></span>
+                  : <span>{Math.max(0, (brew.water || 300) - pouredClamped)}g remaining</span>
+                }
               </div>
             </div>
           </section>
