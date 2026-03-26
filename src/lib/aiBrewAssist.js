@@ -97,34 +97,71 @@ Return ONLY this JSON (method must be exactly one of: V60, Chemex, AeroPress, Fr
 }
 
 // Fallback: rule-based brew analysis when AI is unavailable
+// Matrix: rating tier (low 1-2 / mid 3 / high 4-5) × tag signal (under / over / none)
 function getFallbackBrewAnalysis({ rating, tasteTags = [], extraction, method = 'V60' }) {
   const tags = tasteTags.map(t => t.toLowerCase())
   const isUnder = tags.some(t => ['sour', 'bright', 'acidic', 'thin'].includes(t)) || (extraction && extraction < 18)
   const isOver  = tags.some(t => ['bitter', 'astringent', 'harsh', 'dry'].includes(t)) || (extraction && extraction > 24)
+  const tier    = rating <= 2 ? 'low' : rating === 3 ? 'mid' : 'high'
 
-  if (isUnder) return {
+  // Low rating (1–2)
+  if (tier === 'low' && isUnder) return {
     isFallback: true,
-    headline: '"Bright and lively — but there\'s more to unlock."',
-    tip: 'Sour or thin notes point to under-extraction. Try going 1–2 clicks finer on your grind or raise water temperature by 2–3°C. A slower, more even pour will also extend contact time and improve solubles yield.',
-    extractionNote: `Your ${method} brew shows signs of under-extraction — dominant bright or sour flavours indicate not enough solubles were dissolved. Grinding finer, raising brew temperature, or extending total brew time should push the extraction further into the sweet spot and round out the cup.`,
+    headline: '"Significantly under-extracted — this one needs a real fix."',
+    tip: 'The combination of a low rating and sour or thin notes points to a meaningful extraction shortfall. Go 2–3 clicks finer, raise water temperature by 3–4°C, and slow your pour right down. These changes together should shift the cup noticeably.',
+    extractionNote: `A low rating paired with bright or sour tags on a ${method} brew is a strong signal of under-extraction. Not enough solubles were dissolved — the sweetness and body that balance acidity never had a chance to develop. A finer grind and higher temperature are the most impactful levers here.`,
   }
-  if (isOver) return {
+  if (tier === 'low' && isOver) return {
     isFallback: true,
-    headline: '"Bold and full — but bitterness is stealing the show."',
-    tip: 'Bitter or astringent notes typically signal over-extraction. Go 1–2 clicks coarser and consider dropping your water temperature by 2–3°C. Reducing total steep time can also help dial back the harsh compounds.',
-    extractionNote: `The ${method} brew has extracted past the optimal window — bitter or astringent flavours suggest over-solubles dissolution. Coarsening the grind or lowering brew temperature should bring the extraction back into balance and restore sweetness and clarity.`,
+    headline: '"Over-extracted and rough — time for a significant reset."',
+    tip: 'A low rating alongside bitter or astringent notes means extraction ran well past the sweet spot. Go 2–3 clicks coarser, drop water temperature by 3–4°C, and shorten your brew time. All three adjustments at once will make the biggest difference.',
+    extractionNote: `Bitter or astringent flavours at a low satisfaction rating on a ${method} brew indicate significant over-extraction. Harsh, high-molecular-weight compounds dominated the cup. A coarser grind and lower temperature are the priority — reducing contact time will prevent those compounds from dissolving in the first place.`,
   }
-  if (rating >= 4) return {
+  if (tier === 'low') return {
     isFallback: true,
-    headline: '"A well-dialled extraction — textbook balance."',
-    tip: 'Your parameters are working well together. Keep your grind size consistent and consider logging this as a saved recipe. A small ±1°C water temperature experiment could further enhance clarity or sweetness.',
-    extractionNote: `Your ${method} brew shows strong parameter alignment. The balanced taste profile suggests an extraction yield in the sweet spot with good solubles distribution. Taste tags indicate complete development without harsh over-extraction — a solid baseline to build on.`,
+    headline: '"Disappointing cup — but the parameters will tell the story."',
+    tip: 'With a low rating and no strong flavour signal, the issue may be recipe-level: check your dose-to-water ratio and water temperature first. A fresh grind and pre-heated equipment often resolve cups that taste flat or hollow.',
+    extractionNote: `A low satisfaction score without clear under- or over-extraction tags on a ${method} brew can point to stale beans, poor water quality, or a ratio that's significantly off. Revisit your recipe fundamentals before changing grind size — sometimes the issue isn't extraction at all.`,
+  }
+
+  // Mid rating (3)
+  if (tier === 'mid' && isUnder) return {
+    isFallback: true,
+    headline: '"Decent, but the brightness is holding it back."',
+    tip: 'A mid rating with sour or bright notes suggests you\'re close but just short of the sweet spot. Try 1–2 clicks finer or nudge water temperature up by 2°C — one change at a time so you can isolate the effect.',
+    extractionNote: `Your ${method} brew is in the right ballpark but shows mild under-extraction — the sour or thin notes indicate the sweeter, more complex solubles didn't fully develop. A small grind adjustment is likely all that's needed to round out the cup.`,
+  }
+  if (tier === 'mid' && isOver) return {
+    isFallback: true,
+    headline: '"On the right track, but bitterness is creeping in."',
+    tip: 'Mid satisfaction with bitter or astringent notes means you\'re just past the sweet spot. Pull back 1–2 clicks coarser or drop temperature by 2°C. Small, single-variable changes will get you dialled in quickly.',
+    extractionNote: `The ${method} brew is reasonably extracted but has gone slightly over — bitter notes at a mid rating suggest the tail end of extraction introduced harsh compounds. A modest grind or temperature adjustment should restore balance without losing the body you already have.`,
+  }
+  if (tier === 'mid') return {
+    isFallback: true,
+    headline: '"Solid, but there\'s a better cup in these parameters."',
+    tip: 'A 3/5 with no strong flavour signal means the brew is technically sound but not yet singing. Try adjusting your ratio by ±1g of coffee, or experiment with bloom time and pour technique before touching the grind.',
+    extractionNote: `Your ${method} brew is extracting evenly but the cup isn't fully expressing the bean's potential. Without a clear flavour fault, the gains are likely in technique — consistency of pour rate, water distribution, and bloom duration — rather than a recipe change.`,
+  }
+
+  // High rating (4–5)
+  if (tier === 'high' && isUnder) return {
+    isFallback: true,
+    headline: '"Great cup — a touch finer could make it exceptional."',
+    tip: 'High satisfaction with bright notes means the extraction is enjoyable but there\'s still sweetness to unlock. A single click finer is enough — you\'re close to the sweet spot and don\'t want to overshoot.',
+    extractionNote: `An enjoyable ${method} brew with a hint of brightness suggests you\'re just shy of the extraction sweet spot. The high rating means the foundation is solid — a conservative 1-click grind adjustment is all that separates you from unlocking the full sweetness the bean has to offer.`,
+  }
+  if (tier === 'high' && isOver) return {
+    isFallback: true,
+    headline: '"Almost perfect — just rein in the bitterness."',
+    tip: 'A high rating despite bitter notes shows a strong base recipe. Back off 1 click coarser — that small change should remove the bitter edge while keeping everything you already love about this cup.',
+    extractionNote: `A high satisfaction score alongside slight bitterness on a ${method} brew means you\'re extracting well but just clipping the over-extraction range. The good news: one small grind adjustment is likely all it takes to eliminate that edge and make this your go-to recipe.`,
   }
   return {
     isFallback: true,
-    headline: '"Solid brew with room to refine."',
-    tip: 'Your brew is on track. Fine-tuning grind size by one click and keeping water temperature consistent between sessions will help you dial in more precisely. Keep tracking your parameters for faster iteration.',
-    extractionNote: `This ${method} brew shows reasonable extraction. The taste profile suggests some room to optimise — small, incremental adjustments to grind size and brew temperature will help you consistently hit the sweet spot for this bean.`,
+    headline: '"Dialled in — this one\'s worth saving as a recipe."',
+    tip: 'Your parameters and taste profile are in harmony. Log this as a saved recipe and keep your grind and ratio consistent. If you want to experiment, try a ±1°C water temperature change to see how it affects sweetness or clarity.',
+    extractionNote: `Your ${method} brew is well-extracted and well-received — a high rating with a balanced or positive taste profile indicates solid technique and a well-suited recipe. This is a strong baseline; any further refinements should be small and deliberate to avoid losing what\'s already working.`,
   }
 }
 
