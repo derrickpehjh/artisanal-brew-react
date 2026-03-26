@@ -87,7 +87,7 @@ export default function Layout({ children, searchPlaceholder = 'Search archives.
 
       {/* Top Bar */}
       <header className="fixed top-0 right-0 left-0 md:left-64 h-16 z-40 bg-background/80 backdrop-blur-xl shadow-[0_12px_40px_rgba(62,39,35,0.08)]">
-        <div className="flex justify-between items-center px-4 md:px-10 h-full max-w-[1440px] mx-auto w-full">
+        <div className="flex items-center px-4 md:px-10 h-full max-w-[1440px] mx-auto w-full">
           <div className="md:hidden flex items-center gap-2">
             <div className="w-8 h-8 bg-primary-container rounded-full flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-white text-base" style={{fontVariationSettings:"'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24"}}>coffee</span>
@@ -105,7 +105,7 @@ export default function Layout({ children, searchPlaceholder = 'Search archives.
               />
             </div>
           )}
-          <div className="flex items-center gap-4 md:gap-6">
+          <div className="flex items-center gap-4 md:gap-6 ml-auto">
             <button onClick={() => alert('No new notifications.')} className="text-on-surface-variant hover:text-primary transition-colors">
               <span className="material-symbols-outlined">notifications</span>
             </button>
