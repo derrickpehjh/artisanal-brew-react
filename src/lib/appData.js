@@ -373,7 +373,19 @@ export const TIPS = [
 ]
 
 export function getTip() { return TIPS[new Date().getDate() % TIPS.length] }
-export function getPhases(method) { return PHASES[method] || PHASES['V60'] }
+
+export function getPhases(method, water) {
+  const base = PHASES[method] || PHASES['V60']
+  if (!water) return base
+  // targetWater values are cumulative totals — scale them to match brew.water
+  const maxWater = Math.max(...base.map(p => p.targetWater))
+  if (!maxWater) return base
+  const scale = water / maxWater
+  return base.map(p => ({
+    ...p,
+    targetWater: p.targetWater > 0 ? Math.round(p.targetWater * scale) : 0,
+  }))
+}
 
 // Pending brew (localStorage)
 export function getPendingBrew() { try { return JSON.parse(localStorage.getItem('artisanal_pending_brew')) } catch { return null } }

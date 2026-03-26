@@ -7,7 +7,7 @@ export default function GuidedBrew() {
   const navigate = useNavigate()
   const brew = getPendingBrew()
 
-  const phases = brew ? getPhases(brew.method) : []
+  const phases = brew ? getPhases(brew.method, brew.water) : []
 
   const [currentPhase, setCurrentPhase] = useState(0)
   const [totalSecs, setTotalSecs] = useState(0)
@@ -110,13 +110,17 @@ export default function GuidedBrew() {
   const phasePct = ph.duration > 0 ? Math.min((phaseSecs / ph.duration) * 100, 100) : 100
   const arcOffset = 653.5 * (1 - phasePct / 100)
 
-  // Simulated water poured
-  const prevTarget = phases.slice(0, currentPhase).reduce((s, p) => s + p.targetWater, 0)
+  // targetWater is cumulative (e.g. V60: 40→120→220g total on scale)
+  // prevCumulative = what the scale read at the START of this phase
+  const prevCumulative = currentPhase > 0
+    ? [...phases].slice(0, currentPhase).reverse().find(p => p.targetWater > 0)?.targetWater || 0
+    : 0
+  const phaseIncrement = ph.targetWater - prevCumulative
   const poured = ph.targetWater > 0
-    ? prevTarget + Math.round((phaseSecs / ph.duration) * ph.targetWater)
-    : prevTarget
-  const pouredClamped = Math.min(poured, prevTarget + ph.targetWater)
-  const weightBarPct = Math.min((pouredClamped / (brew.water || 310)) * 100, 100)
+    ? prevCumulative + Math.round((phaseSecs / ph.duration) * phaseIncrement)
+    : prevCumulative
+  const pouredClamped = Math.min(poured, ph.targetWater || prevCumulative)
+  const weightBarPct = Math.min((pouredClamped / (brew.water || 300)) * 100, 100)
 
   const remaining = phases.slice(currentPhase).reduce((s, p) => s + p.duration, 0)
   const estCompletion = formatTime(totalSecs + remaining)
@@ -204,14 +208,14 @@ export default function GuidedBrew() {
                 <div>
                   <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-1 font-bold">Water Poured</p>
                   <div className="flex items-baseline gap-1">
-                    <span className="font-headline text-6xl font-bold text-primary italic leading-none">{ph.targetWater > 0 ? pouredClamped : prevTarget}</span>
+                    <span className="font-headline text-6xl font-bold text-primary italic leading-none">{pouredClamped}</span>
                     <span className="text-xl text-on-surface-variant not-italic ml-1">g</span>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-1 font-bold">Target</p>
                   <div className="flex items-baseline gap-1 justify-end">
-                    <span className="font-headline text-3xl font-medium text-on-surface-variant leading-none">{ph.targetWater > 0 ? prevTarget + ph.targetWater : '—'}</span>
+                    <span className="font-headline text-3xl font-medium text-on-surface-variant leading-none">{ph.targetWater > 0 ? ph.targetWater : '—'}</span>
                     {ph.targetWater > 0 && <span className="text-sm text-on-surface-variant">g</span>}
                   </div>
                 </div>
@@ -220,8 +224,8 @@ export default function GuidedBrew() {
                 <div className="h-full brew-gradient rounded-full transition-all duration-500" style={{width: weightBarPct+'%'}}></div>
               </div>
               <div className="flex justify-between mt-2 text-[10px] text-on-surface-variant font-bold">
-                <span>{ph.targetWater > 0 ? pouredClamped : prevTarget}g poured</span>
-                <span>{Math.max(0, (brew.water||310) - (ph.targetWater > 0 ? pouredClamped : prevTarget))}g remaining</span>
+                <span>{pouredClamped}g poured</span>
+                <span>{Math.max(0, (brew.water || 300) - pouredClamped)}g remaining</span>
               </div>
             </div>
           </section>
