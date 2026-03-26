@@ -1,16 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { lazy, Suspense } from 'react'
 import { useApp } from './context/AppContext'
-
-const Login        = lazy(() => import('./pages/Login'))
-const Dashboard    = lazy(() => import('./pages/Dashboard'))
-const Beans        = lazy(() => import('./pages/Beans'))
-const BrewSetup    = lazy(() => import('./pages/BrewSetup'))
-const GuidedBrew   = lazy(() => import('./pages/GuidedBrew'))
-const TasteAnalysis = lazy(() => import('./pages/TasteAnalysis'))
-const Analytics    = lazy(() => import('./pages/Analytics'))
-const Recipes      = lazy(() => import('./pages/Recipes'))
-const Settings     = lazy(() => import('./pages/Settings'))
+import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+import Beans from './pages/Beans'
+import BrewSetup from './pages/BrewSetup'
+import GuidedBrew from './pages/GuidedBrew'
+import TasteAnalysis from './pages/TasteAnalysis'
+import Analytics from './pages/Analytics'
+import Recipes from './pages/Recipes'
+import Settings from './pages/Settings'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useApp()
@@ -34,20 +32,18 @@ function ProtectedRoute({ children }) {
 export default function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={null}>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/beans" element={<ProtectedRoute><Beans /></ProtectedRoute>} />
-          <Route path="/brew-setup" element={<ProtectedRoute><BrewSetup /></ProtectedRoute>} />
-          <Route path="/guided-brew" element={<ProtectedRoute><GuidedBrew /></ProtectedRoute>} />
-          <Route path="/taste-analysis" element={<ProtectedRoute><TasteAnalysis /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-          <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/beans" element={<ProtectedRoute><Beans /></ProtectedRoute>} />
+        <Route path="/brew-setup" element={<ProtectedRoute><BrewSetup /></ProtectedRoute>} />
+        <Route path="/guided-brew" element={<ProtectedRoute><GuidedBrew /></ProtectedRoute>} />
+        <Route path="/taste-analysis" element={<ProtectedRoute><TasteAnalysis /></ProtectedRoute>} />
+        <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+        <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </BrowserRouter>
   )
 }
