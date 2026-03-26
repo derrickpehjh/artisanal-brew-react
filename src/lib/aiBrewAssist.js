@@ -20,9 +20,36 @@ function parseJSON(text) {
   try { return JSON.parse(match[0]) } catch { return null }
 }
 
+// Fallback: rule-based grind suggestion when AI is unavailable
+function getFallbackGrindSuggestion({ rating, tasteTags = [], extraction }) {
+  const tags = tasteTags.map(t => t.toLowerCase())
+  const isUnder = tags.some(t => ['sour', 'bright', 'acidic', 'thin'].includes(t)) || (extraction && extraction < 18)
+  const isOver  = tags.some(t => ['bitter', 'astringent', 'harsh', 'dry'].includes(t)) || (extraction && extraction > 24)
+
+  if (isUnder) return {
+    direction: 'finer',
+    amount: '1–2 clicks finer',
+    reasoning: 'Sour or thin taste notes suggest under-extraction — a finer grind increases surface area and contact time.',
+    tip: 'Also try raising your water temperature by 1–2°C and pouring more slowly to extend extraction.',
+  }
+  if (isOver) return {
+    direction: 'coarser',
+    amount: '1–2 clicks coarser',
+    reasoning: 'Bitter or astringent notes suggest over-extraction — a coarser grind reduces contact time and harsh compound dissolution.',
+    tip: 'Lowering water temperature by 1–2°C alongside the grind adjustment can further tame over-extraction.',
+  }
+  return {
+    direction: 'none',
+    amount: 'No change needed',
+    reasoning: 'Your current grind size appears well-matched to your brew parameters and taste profile.',
+    tip: 'Keep your grind size consistent for the next few sessions to build a reliable baseline before experimenting.',
+  }
+}
+
 // Feature 1: grind suggestion after brew
 export async function suggestGrindAdjustment({ method, grindSize, dose, water, temp, rating, tasteTags, extraction }) {
-  const text = await callGemini(`You are a coffee extraction expert. A brewer just finished a ${method} brew:
+  try {
+    const text = await callGemini(`You are a coffee extraction expert. A brewer just finished a ${method} brew:
 - Grind: ${grindSize}, Dose: ${dose}g, Water: ${water}g, Temp: ${temp}°C
 - Rating: ${rating}/5, Taste tags: ${(tasteTags||[]).join(', ') || 'none'}, Extraction: ${extraction || '?'}%
 
@@ -33,7 +60,11 @@ Suggest a grind adjustment for next brew. Return ONLY this JSON:
   "reasoning": "one sentence explanation referencing the tasting evidence",
   "tip": "one specific actionable tip for the next brew session"
 }`)
-  return parseJSON(text)
+    const result = parseJSON(text)
+    return result ?? getFallbackGrindSuggestion({ rating, tasteTags, extraction })
+  } catch {
+    return getFallbackGrindSuggestion({ rating, tasteTags, extraction })
+  }
 }
 
 // Feature 2: recipe generator
@@ -56,9 +87,42 @@ Return ONLY this JSON (method must be exactly one of: V60, Chemex, AeroPress, Fr
   return parseJSON(text)
 }
 
+// Fallback: rule-based brew analysis when AI is unavailable
+function getFallbackBrewAnalysis({ rating, tasteTags = [], extraction, method = 'V60' }) {
+  const tags = tasteTags.map(t => t.toLowerCase())
+  const isUnder = tags.some(t => ['sour', 'bright', 'acidic', 'thin'].includes(t)) || (extraction && extraction < 18)
+  const isOver  = tags.some(t => ['bitter', 'astringent', 'harsh', 'dry'].includes(t)) || (extraction && extraction > 24)
+
+  if (isUnder) return {
+    isFallback: true,
+    headline: '"Bright and lively — but there\'s more to unlock."',
+    tip: 'Sour or thin notes point to under-extraction. Try going 1–2 clicks finer on your grind or raise water temperature by 2–3°C. A slower, more even pour will also extend contact time and improve solubles yield.',
+    extractionNote: `Your ${method} brew shows signs of under-extraction — dominant bright or sour flavours indicate not enough solubles were dissolved. Grinding finer, raising brew temperature, or extending total brew time should push the extraction further into the sweet spot and round out the cup.`,
+  }
+  if (isOver) return {
+    isFallback: true,
+    headline: '"Bold and full — but bitterness is stealing the show."',
+    tip: 'Bitter or astringent notes typically signal over-extraction. Go 1–2 clicks coarser and consider dropping your water temperature by 2–3°C. Reducing total steep time can also help dial back the harsh compounds.',
+    extractionNote: `The ${method} brew has extracted past the optimal window — bitter or astringent flavours suggest over-solubles dissolution. Coarsening the grind or lowering brew temperature should bring the extraction back into balance and restore sweetness and clarity.`,
+  }
+  if (rating >= 4) return {
+    isFallback: true,
+    headline: '"A well-dialled extraction — textbook balance."',
+    tip: 'Your parameters are working well together. Keep your grind size consistent and consider logging this as a saved recipe. A small ±1°C water temperature experiment could further enhance clarity or sweetness.',
+    extractionNote: `Your ${method} brew shows strong parameter alignment. The balanced taste profile suggests an extraction yield in the sweet spot with good solubles distribution. Taste tags indicate complete development without harsh over-extraction — a solid baseline to build on.`,
+  }
+  return {
+    isFallback: true,
+    headline: '"Solid brew with room to refine."',
+    tip: 'Your brew is on track. Fine-tuning grind size by one click and keeping water temperature consistent between sessions will help you dial in more precisely. Keep tracking your parameters for faster iteration.',
+    extractionNote: `This ${method} brew shows reasonable extraction. The taste profile suggests some room to optimise — small, incremental adjustments to grind size and brew temperature will help you consistently hit the sweet spot for this bean.`,
+  }
+}
+
 // Feature 2b: post-brew sommelier analysis + extraction note
 export async function getBrewAnalysis({ method, dose, water, temp, ratio, grindSize, extraction, rating, tasteTags, beanName, beanOrigin, beanProcess, beanRoastLevel }) {
-  const text = await callGemini(`You are a specialty coffee sommelier and extraction expert. Analyse this brew session:
+  try {
+    const text = await callGemini(`You are a specialty coffee sommelier and extraction expert. Analyse this brew session:
 
 Bean: ${beanName || 'Unknown'}${beanOrigin ? ` (${beanOrigin})` : ''}${beanProcess ? `, ${beanProcess} process` : ''}${beanRoastLevel ? `, ${beanRoastLevel} roast` : ''}
 Method: ${method}, Dose: ${dose}g / Water: ${water}g${ratio ? ` (${ratio})` : ''}, Temp: ${temp}°C
@@ -71,7 +135,11 @@ Return ONLY this JSON:
   "tip": "2-3 sentences: acknowledge what worked well, then give one specific parameter adjustment for the next session",
   "extractionNote": "2-3 sentences of technical analysis: how this method and these parameters interacted, and what the taste tags reveal about the extraction yield"
 }`)
-  return parseJSON(text)
+    const result = parseJSON(text)
+    return result ?? getFallbackBrewAnalysis({ rating, tasteTags, extraction, method })
+  } catch {
+    return getFallbackBrewAnalysis({ rating, tasteTags, extraction, method })
+  }
 }
 
 // Feature 3: freshness assessment (pure JS, no AI)

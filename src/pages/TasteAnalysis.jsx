@@ -63,7 +63,7 @@ export default function TasteAnalysis() {
       beanRoastLevel: bean?.roastLevel,
     })
       .then(result => setBrewAnalysis(result))
-      .catch(() => setBrewAnalysis(null))
+      .catch(() => {}) // getBrewAnalysis handles its own fallback; this is a safety net
       .finally(() => setLoadingAnalysis(false))
   }, [brew, bean])
 
@@ -275,6 +275,11 @@ export default function TasteAnalysis() {
                   </div>
                 ) : brewAnalysis ? (
                   <>
+                    {brewAnalysis.isFallback && (
+                      <p className="text-white/40 text-[10px] uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[12px]">wifi_off</span>AI offline — showing smart defaults
+                      </p>
+                    )}
                     <h3 className="font-headline text-2xl leading-snug text-white mb-5">{brewAnalysis.headline}</h3>
                     <p className="text-white/75 text-sm leading-relaxed mb-7">{brewAnalysis.tip}</p>
                   </>
@@ -375,7 +380,14 @@ export default function TasteAnalysis() {
           <h3 className="font-headline text-2xl font-bold text-primary border-l-4 border-primary-container pl-5">Deep Extraction Analysis</h3>
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
             <div className="col-span-1 md:col-span-7 bg-surface-container-low p-6 md:p-9 rounded-xl">
-              <h4 className="font-headline text-lg mb-4 italic text-primary">Extraction Analysis</h4>
+              <div className="flex items-center gap-3 mb-4">
+                <h4 className="font-headline text-lg italic text-primary">Extraction Analysis</h4>
+                {brewAnalysis?.isFallback && (
+                  <span className="text-[10px] font-bold text-on-surface-variant/50 uppercase tracking-widest flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[11px]">wifi_off</span>offline
+                  </span>
+                )}
+              </div>
               {loadingAnalysis ? (
                 <div className="space-y-2 mb-6">
                   <div className="h-4 bg-surface-container rounded animate-pulse w-full"></div>
