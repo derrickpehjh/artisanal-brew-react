@@ -1,11 +1,13 @@
 const GEMINI_MODEL = 'gemini-2.0-flash'
+const RETRY_DELAYS_MS = [5000, 15000, 30000]
 
 async function callGemini(apiKey, body) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`
   const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
   let response = await fetch(url, opts)
-  if (response.status === 429) {
-    await new Promise(r => setTimeout(r, 5000))
+  for (const delay of RETRY_DELAYS_MS) {
+    if (response.status !== 429) break
+    await new Promise(r => setTimeout(r, delay))
     response = await fetch(url, opts)
   }
   return response
