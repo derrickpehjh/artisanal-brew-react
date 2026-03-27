@@ -19,9 +19,11 @@ function loadPrefs(): BrewPrefs {
 }
 
 export default function Settings() {
-  const { user, beans, brews, stats, signOut, resetAllData, supabase } = useApp()
+  const { user, beans, brews, stats, signOut, resetAllData, migrateExtractionValues, supabase } = useApp()
   const [signingOut, setSigningOut] = useState(false)
   const [resetting, setResetting] = useState(false)
+  const [migrating, setMigrating] = useState(false)
+  const [migrateResult, setMigrateResult] = useState<string | null>(null)
   const [prefs, setPrefs] = useState<BrewPrefs>(loadPrefs)
   const [prefsSaved, setPrefsSaved] = useState(false)
 
@@ -46,6 +48,19 @@ export default function Settings() {
     a.href = URL.createObjectURL(blob)
     a.download = 'artisanal-brew-export.json'
     a.click()
+  }
+
+  async function handleMigrateExtraction() {
+    setMigrating(true)
+    setMigrateResult(null)
+    try {
+      const count = await migrateExtractionValues()
+      setMigrateResult(count > 0 ? `Fixed ${count} brew${count !== 1 ? 's' : ''}.` : 'All brews already up to date.')
+    } catch (err) {
+      setMigrateResult('Failed: ' + ((err as Error)?.message || 'unknown error'))
+    } finally {
+      setMigrating(false)
+    }
   }
 
   async function handleReset() {
@@ -185,6 +200,27 @@ export default function Settings() {
                 </div>
               </div>
               <button onClick={exportData} className="px-4 py-2 bg-surface-container-high text-on-surface rounded-lg text-xs font-bold hover:bg-surface-container-highest transition-colors">Export</button>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary">science</span>
+                <div>
+                  <p className="text-sm font-bold text-primary">Fix Extraction Values</p>
+                  <p className="text-xs text-on-surface-variant">
+                    {migrateResult ?? 'Recalculates old brews saved with the incorrect formula (values below 15%)'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleMigrateExtraction}
+                disabled={migrating}
+                className="px-4 py-2 bg-surface-container-high text-on-surface rounded-lg text-xs font-bold hover:bg-surface-container-highest transition-colors disabled:opacity-60 shrink-0"
+              >
+                {migrating
+                  ? <span className="inline-flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>Fixing…</span>
+                  : 'Fix Now'
+                }
+              </button>
             </div>
             <div className="flex items-center justify-between p-4 bg-error-container/20 rounded-xl border border-error/10">
               <div className="flex items-center gap-3">

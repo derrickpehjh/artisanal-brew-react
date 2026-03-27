@@ -74,6 +74,7 @@ function makeContext(overrides: Partial<AppContextValue> = {}): AppContextValue 
     deleteBean: vi.fn(),
     saveBrew: vi.fn().mockResolvedValue(mockBrew),
     resetAllData: vi.fn(),
+    migrateExtractionValues: vi.fn().mockResolvedValue(0),
     signOut: vi.fn(),
     getActiveBean: vi.fn(() => mockBean),
     setActiveBeanId: vi.fn(),

@@ -311,6 +311,33 @@ export async function saveBrew(brew: Partial<Brew>): Promise<Brew> {
   return payload
 }
 
+// Recalculates extraction for brews saved with the old inverted formula (dose/water)*100*1.2.
+// Those brews have extraction values < 15 (old formula caps out ~10% for typical ratios).
+// The correct formula is (water/dose)*1.2, producing 18-22% for typical filter ratios.
+export async function migrateExtractionValues(): Promise<number> {
+  const stale = _brews.filter(b => b.extraction != null && b.extraction > 0 && b.extraction < 15)
+  if (!stale.length) return 0
+
+  const updates = stale.map(b => ({
+    brew: b,
+    newExtraction: Number(((b.water / b.dose) * 1.2).toFixed(1)),
+  }))
+
+  if (_user && isSupabaseConfigured && supabase) {
+    await Promise.all(updates.map(({ brew, newExtraction }) =>
+      supabase!.from('brews').update({ extraction: newExtraction }).eq('id', brew.id).eq('user_id', _user!.id)
+    ))
+  }
+
+  // Update in-memory cache
+  for (const { brew, newExtraction } of updates) {
+    const idx = _brews.findIndex(b => b.id === brew.id)
+    if (idx !== -1) _brews[idx] = { ..._brews[idx], extraction: newExtraction }
+  }
+  saveLocalSnapshot()
+  return updates.length
+}
+
 export async function resetAllData(userId: string): Promise<void> {
   if (isSupabaseConfigured && supabase) {
     await Promise.all([

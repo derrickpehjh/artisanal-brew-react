@@ -3,7 +3,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import {
   loadData, setUser as setDataUser, getBeans, getBrews, getStats,
   addBean as _addBean, updateBean as _updateBean, deleteBean as _deleteBean,
-  saveBrew as _saveBrew, resetAllData as _resetAllData,
+  saveBrew as _saveBrew, resetAllData as _resetAllData, migrateExtractionValues as _migrateExtractionValues,
   getPendingBrew, setPendingBrew, clearPendingBrew,
   getActiveBeanId, setActiveBeanId,
   formatDate, formatRatio, formatTime, buildChartPath, getTip, getPhases,
@@ -113,6 +113,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setBrews([])
   }, [user])
 
+  const migrateExtractionValues = useCallback(async () => {
+    const count = await _migrateExtractionValues()
+    if (count > 0) setBrews(getBrews())
+    return count
+  }, [])
+
   const signOut = useCallback(async () => {
     if (supabase) await supabase.auth.signOut()
     localStorage.removeItem('artisanal_pending_brew')
@@ -134,7 +140,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     user, beans, brews, loading, initialized,
     stats,
     refresh: () => (user ? refresh(user) : Promise.resolve()),
-    addBean, updateBean, deleteBean, saveBrew, resetAllData, signOut,
+    addBean, updateBean, deleteBean, saveBrew, resetAllData, migrateExtractionValues, signOut,
     getActiveBean, setActiveBeanId, getBestBrews,
     getPendingBrew, setPendingBrew, clearPendingBrew,
     formatDate, formatRatio, formatTime, buildChartPath, getTip, getPhases,

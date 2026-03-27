@@ -17,6 +17,7 @@ export interface AppContextValue {
   deleteBean: (id: string) => Promise<Bean | undefined>
   saveBrew: (brew: Partial<Brew>) => Promise<Brew>
   resetAllData: () => Promise<void>
+  migrateExtractionValues: () => Promise<number>
   signOut: () => Promise<void>
   getActiveBean: () => Bean
   setActiveBeanId: (id: string) => void
