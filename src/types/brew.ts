@@ -43,6 +43,8 @@ export interface BrewStats {
   weeklyVolumeLiters: number
   weeklyYields: number[]
   trendPct: number
+  avgExtraction: number | null
+  extractionInRange: number
 }
 
 export type BrewMethod = 'V60' | 'Chemex' | 'AeroPress' | 'French Press'

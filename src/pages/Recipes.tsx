@@ -4,8 +4,14 @@ import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
 import Stars from '../components/ui/Stars'
 import { PHASES } from '../lib/appData'
-import type { BrewPhase } from '../types/brew'
-import type { Brew } from '../types/brew'
+import type { BrewPhase, Brew } from '../types/brew'
+
+const METHOD_BADGE: Record<string, string> = {
+  'V60': 'bg-primary text-white',
+  'Chemex': 'bg-tertiary-container text-on-tertiary-container',
+  'AeroPress': 'bg-surface-container-highest text-on-surface',
+  'French Press': 'bg-surface-container text-on-surface-variant',
+}
 
 function phasesDuration(method: string): string {
   const phases: BrewPhase[] = (PHASES as Record<string, BrewPhase[]>)[method] || (PHASES as Record<string, BrewPhase[]>)['V60']
@@ -51,24 +57,37 @@ interface RecipeCardProps {
 }
 
 function RecipeCard({ recipe, idx, canReplicate, onUse }: RecipeCardProps) {
+  const extraction = (recipe as Brew).extraction
   return (
     <div className="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(62,39,35,0.04)] hover:shadow-xl transition-all flex flex-col">
       <div className="h-44 overflow-hidden relative">
         <img src={IMAGES[idx % IMAGES.length]} alt={recipe.beanName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
-        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-1 rounded text-[10px] font-bold text-primary uppercase tracking-wide">{recipe.method}</div>
-        <div className="absolute top-3 right-3 flex gap-0.5"><Stars rating={recipe.rating} /></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-primary/50 to-transparent"></div>
+        <div className="absolute top-3 left-3">
+          <span className={`text-[9px] font-bold px-2.5 py-1 rounded uppercase tracking-wide ${METHOD_BADGE[recipe.method] || 'bg-white/90 text-primary'}`}>{recipe.method}</span>
+        </div>
+        <div className="absolute top-3 right-3">
+          {extraction != null && extraction > 0 && (
+            <span className="text-[9px] font-bold px-2 py-0.5 bg-white/90 text-primary rounded">{extraction}%</span>
+          )}
+        </div>
+        <div className="absolute bottom-3 right-3 flex gap-0.5"><Stars rating={recipe.rating} size="text-xs" /></div>
       </div>
-      <div className="p-6 flex flex-col flex-1 gap-4">
+      <div className="p-5 flex flex-col flex-1 gap-3">
         <div>
-          <h4 className="font-headline text-lg font-bold text-primary leading-tight">{recipe.beanName}</h4>
-          <p className="text-xs text-on-surface-variant mt-1">{recipe.ratio} &bull; {recipe.dose}g / {recipe.water}g &bull; {recipe.temp}°C</p>
+          <h4 className="font-headline text-base font-bold text-primary leading-tight">{recipe.beanName}</h4>
+          <p className="text-[10px] text-on-surface-variant mt-0.5">{recipe.ratio} · {recipe.dose}g / {recipe.water}g · {recipe.temp}°C</p>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {(recipe.tasteTags || []).map(t => (
-            <span key={t} className="px-2 py-0.5 bg-surface-container text-on-surface-variant rounded text-[10px] font-bold uppercase">{t}</span>
-          ))}
-        </div>
-        {recipe.notes && <p className="text-xs text-on-surface-variant italic leading-relaxed border-l-2 border-outline-variant/30 pl-3">{recipe.notes}</p>}
+        {(recipe.tasteTags || []).length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {(recipe.tasteTags || []).slice(0, 4).map(t => (
+              <span key={t} className="px-2 py-0.5 bg-surface-container text-on-surface-variant rounded text-[9px] font-bold uppercase">{t}</span>
+            ))}
+          </div>
+        )}
+        {recipe.notes && (
+          <p className="text-[11px] text-on-surface-variant italic leading-relaxed border-l-2 border-outline-variant/30 pl-3">{recipe.notes}</p>
+        )}
         <div className="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/10">
           {([['Grind', recipe.grindSize || '—'], ['Time', phasesDuration(recipe.method)], ['Temp', recipe.temp + '°C']] as [string, string][]).map(([l, v]) => (
             <div key={l} className="text-center">
@@ -77,7 +96,7 @@ function RecipeCard({ recipe, idx, canReplicate, onUse }: RecipeCardProps) {
             </div>
           ))}
         </div>
-        <button onClick={() => onUse(recipe)} className="mt-auto w-full py-2.5 brew-gradient text-white rounded-md font-bold text-xs uppercase tracking-widest hover:opacity-90 transition-colors">
+        <button onClick={() => onUse(recipe)} className="mt-auto w-full py-2.5 brew-gradient text-white rounded-lg font-bold text-xs uppercase tracking-widest hover:opacity-90 transition-colors">
           {canReplicate ? 'Use This Recipe' : 'Try This Recipe'}
         </button>
       </div>
@@ -132,8 +151,13 @@ export default function Recipes() {
 
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-headline text-2xl font-bold text-primary">From Your Best Brews</h3>
-            <Link to="/analytics" className="text-xs font-bold text-primary underline underline-offset-4 hover:text-on-surface-variant transition-colors uppercase tracking-wide">View Analytics</Link>
+            <div>
+              <h3 className="font-headline text-2xl font-bold text-primary">From Your Best Brews</h3>
+              <p className="text-xs text-on-surface-variant mt-0.5">Your highest-rated sessions — one click to replicate</p>
+            </div>
+            <Link to="/analytics" className="text-xs font-bold text-primary underline underline-offset-4 hover:text-on-surface-variant transition-colors uppercase tracking-wide flex items-center gap-1">
+              View Analytics <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+            </Link>
           </div>
           {bestBrews.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -152,7 +176,10 @@ export default function Recipes() {
         </section>
 
         <section>
-          <h3 className="font-headline text-2xl font-bold text-primary mb-6">Community Classics</h3>
+          <div className="mb-6">
+            <h3 className="font-headline text-2xl font-bold text-primary">Community Classics</h3>
+            <p className="text-xs text-on-surface-variant mt-0.5">Proven recipes from the specialty coffee community</p>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {communityRecipes.map((r, i) => <RecipeCard key={i} recipe={r} idx={i + 1} canReplicate={false} onUse={replicateRecipe} />)}
           </div>
