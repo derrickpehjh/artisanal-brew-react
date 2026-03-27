@@ -86,6 +86,26 @@ export const brewToDb = (b: Brew, userId: string): BrewDbRow => ({
 })
 
 
+function cacheKey(kind: string): string {
+  return `artisanal_${kind}_${_user?.id || 'anon'}`
+}
+
+function saveLocalSnapshot(): void {
+  try {
+    localStorage.setItem(cacheKey('beans'), JSON.stringify(_beans))
+    localStorage.setItem(cacheKey('brews'), JSON.stringify(_brews))
+  } catch (e) { console.warn('Local cache write failed:', (e as Error)?.message) }
+}
+
+function loadLocalSnapshot(): boolean {
+  try {
+    const beans = JSON.parse(localStorage.getItem(cacheKey('beans')) || 'null') as Bean[] | null
+    const brews = JSON.parse(localStorage.getItem(cacheKey('brews')) || 'null') as Brew[] | null
+    if (!Array.isArray(beans) || !Array.isArray(brews)) return false
+    _beans = beans; _brews = brews; return true
+  } catch { return false }
+}
+
 function seedBeans(userId: string): BeanDbRow[] {
   return [
     { id: crypto.randomUUID(), user_id: userId, name: 'Ethiopia Yirgacheffe', origin: 'Ethiopia', process: 'Washed Process', roast_level: 'Light-Medium', roast_date: 'Oct 12, 2023', total_grams: 250, remaining_grams: 162, notes: 'Floral jasmine notes with a bright citrus finish.', community_rating: 4.8, community_reviews: 1200 },
@@ -112,31 +132,36 @@ function seedBrews(userId: string, beanIds: string[]): BrewDbRow[] {
 
 export async function loadData(user: User): Promise<{ beans: Bean[]; brews: Brew[] }> {
   _user = user
-  if (!isSupabaseConfigured || !supabase) {
-    _beans = []; _brews = []
-    return { beans: _beans, brews: _brews }
-  }
+  try {
+    if (!isSupabaseConfigured || !supabase) {
+      if (!loadLocalSnapshot()) { _beans = []; _brews = [] }
+      return { beans: _beans, brews: _brews }
+    }
 
-  const [{ data: beans, error: beansErr }, { data: brews, error: brewsErr }] = await Promise.all([
-    dbTimeout<BeanDbRow[]>(supabase.from('beans').select('*').eq('user_id', user.id).order('created_at') as PromiseLike<{ data: BeanDbRow[] | null; error: unknown }>, DB_TIMEOUT_MS, 'Loading beans timed out'),
-    dbTimeout<BrewDbRow[]>(supabase.from('brews').select('*').eq('user_id', user.id).order('date', { ascending: false }) as PromiseLike<{ data: BrewDbRow[] | null; error: unknown }>, DB_TIMEOUT_MS, 'Loading brews timed out'),
-  ])
-  if (beansErr || brewsErr) throw new Error([beansErr?.message, brewsErr?.message].filter(Boolean).join(' | '))
-
-  if (!beans || beans.length === 0) {
-    const sb = seedBeans(user.id)
-    const beanIds = sb.map(b => b.id)
-    const sbr = seedBrews(user.id, beanIds)
-    const [{ error: seedBeansErr }, { error: seedBrewsErr }] = await Promise.all([
-      Promise.resolve(supabase.from('beans').insert(sb)),
-      Promise.resolve(supabase.from('brews').insert(sbr)),
+    const [{ data: beans, error: beansErr }, { data: brews, error: brewsErr }] = await Promise.all([
+      dbTimeout<BeanDbRow[]>(supabase.from('beans').select('*').eq('user_id', user.id).order('created_at') as PromiseLike<{ data: BeanDbRow[] | null; error: unknown }>, DB_TIMEOUT_MS, 'Loading beans timed out'),
+      dbTimeout<BrewDbRow[]>(supabase.from('brews').select('*').eq('user_id', user.id).order('date', { ascending: false }) as PromiseLike<{ data: BrewDbRow[] | null; error: unknown }>, DB_TIMEOUT_MS, 'Loading brews timed out'),
     ])
-    if (seedBeansErr) throw new Error('Seed failed: ' + seedBeansErr.message)
-    if (seedBrewsErr) throw new Error('Seed failed: ' + seedBrewsErr.message)
-    _beans = sb.map(beanFromDb); _brews = sbr.map(brewFromDb)
-  } else {
-    _beans = (beans as BeanDbRow[]).map(beanFromDb)
-    _brews = ((brews || []) as BrewDbRow[]).map(brewFromDb)
+    if (beansErr || brewsErr) throw new Error([beansErr?.message, brewsErr?.message].filter(Boolean).join(' | '))
+
+    if (!beans || beans.length === 0) {
+      const sb = seedBeans(user.id)
+      const beanIds = sb.map(b => b.id)
+      const sbr = seedBrews(user.id, beanIds)
+      const [{ error: seedBeansErr }, { error: seedBrewsErr }] = await Promise.all([
+        Promise.resolve(supabase.from('beans').insert(sb)),
+        Promise.resolve(supabase.from('brews').insert(sbr)),
+      ])
+      if (seedBeansErr) throw new Error('Seed failed: ' + seedBeansErr.message)
+      if (seedBrewsErr) throw new Error('Seed failed: ' + seedBrewsErr.message)
+      _beans = sb.map(beanFromDb); _brews = sbr.map(brewFromDb)
+    } else {
+      _beans = (beans as BeanDbRow[]).map(beanFromDb)
+      _brews = ((brews || []) as BrewDbRow[]).map(brewFromDb)
+    }
+    saveLocalSnapshot()
+  } catch (e) {
+    if (!loadLocalSnapshot()) throw e
   }
   return { beans: _beans, brews: _brews }
 }
@@ -316,6 +341,8 @@ export async function resetAllData(userId: string): Promise<void> {
   _beans = []; _brews = []
   localStorage.removeItem('artisanal_pending_brew')
   localStorage.removeItem('artisanal_active_bean')
+  localStorage.removeItem(cacheKey('beans'))
+  localStorage.removeItem(cacheKey('brews'))
 }
 
 // Target extraction range for all brew methods (SCA standard)
