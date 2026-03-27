@@ -94,7 +94,7 @@ export default function Dashboard() {
             )}
             <div className="flex flex-col gap-3">
               {otherBeans.map(b => (
-                <div key={b.id} onClick={() => { setActiveBeanId(b.id); window.location.reload() }} className="bg-surface-container-low rounded-xl p-4 flex items-center gap-3 hover:bg-surface-container-high transition-colors cursor-pointer group">
+                <div key={b.id} onClick={() => setActiveBeanId(b.id)} className="bg-surface-container-low rounded-xl p-4 flex items-center gap-3 hover:bg-surface-container-high transition-colors cursor-pointer group">
                   <div className="w-9 h-9 bg-surface-container-highest rounded-lg flex items-center justify-center shrink-0">
                     <span className="material-symbols-outlined text-on-surface-variant text-[18px]">grain</span>
                   </div>

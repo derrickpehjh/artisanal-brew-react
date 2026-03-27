@@ -1,11 +1,11 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import {
   loadData, setUser as setDataUser, getBeans, getBrews, getStats,
   addBean as _addBean, updateBean as _updateBean, deleteBean as _deleteBean,
   saveBrew as _saveBrew, resetAllData as _resetAllData, migrateExtractionValues as _migrateExtractionValues,
   getPendingBrew, setPendingBrew, clearPendingBrew,
-  getActiveBeanId, setActiveBeanId,
+  getActiveBeanId,
   formatDate, formatRatio, formatTime, buildChartPath, getTip, getPhases,
 } from '../lib/appData'
 import type { User } from '@supabase/supabase-js'
@@ -21,6 +21,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [brews, setBrews] = useState<Brew[]>([])
   const [loading, setLoading] = useState(true)
   const [initialized, setInitialized] = useState(false)
+  const [activeBeanId, setActiveBeanIdState] = useState<string>(() => getActiveBeanId() || '')
 
   const refresh = useCallback(async (currentUser: User) => {
     if (!currentUser) return
@@ -125,16 +126,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('artisanal_active_bean')
   }, [])
 
+  const setActiveBeanId = useCallback((id: string) => {
+    localStorage.setItem('artisanal_active_bean', id)
+    setActiveBeanIdState(id)
+  }, [])
+
   const getActiveBean = useCallback((): Bean => {
-    const id = getActiveBeanId()
-    return beans.find(b => b.id === id) || beans[0] || ({} as Bean)
-  }, [beans])
+    return beans.find(b => b.id === activeBeanId) || beans[0] || ({} as Bean)
+  }, [beans, activeBeanId])
 
   const getBestBrews = useCallback((n = 2): Brew[] => {
     return [...brews].sort((a, b) => b.rating - a.rating || new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, n)
   }, [brews])
 
-  const stats = getStats(beans, brews)
+  const stats = useMemo(() => getStats(beans, brews), [beans, brews])
 
   const value: AppContextValue = {
     user, beans, brews, loading, initialized,
