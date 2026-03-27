@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run daily agent
+      - name: Run agentic loop
         env:
           VITE_SUPABASE_URL:       ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_KEY:       ${{ secrets.VITE_SUPABASE_KEY }}
@@ -37,4 +37,5 @@ jobs:
           SUPABASE_AGENT_PASSWORD: ${{ secrets.SUPABASE_AGENT_PASSWORD }}
           AGENT_USER_ID:           ${{ secrets.AGENT_USER_ID }}
           GEMINI_API_KEY:          ${{ secrets.GEMINI_API_KEY }}
-        run: npm start
+          ANTHROPIC_API_KEY:       ${{ secrets.ANTHROPIC_API_KEY }}
+        run: npm run loop
