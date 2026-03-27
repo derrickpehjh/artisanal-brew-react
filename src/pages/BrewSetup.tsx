@@ -19,7 +19,7 @@ function loadBrewPrefs(): BrewPrefs {
 }
 
 function phasesDuration(method: string): string {
-  const phases: BrewPhase[] = (PHASES as Record<string, BrewPhase[]>)[method] || (PHASES as Record<string, BrewPhase[]>)['V60']
+  const phases: BrewPhase[] = (PHASES as Record<string, BrewPhase[]>)[method] || PHASES['V60']
   const secs = phases.reduce((s, p) => s + p.duration, 0)
   const m = Math.floor(secs / 60), s = secs % 60
   return `${m}:${String(s).padStart(2, '0')}`
@@ -53,11 +53,11 @@ export default function BrewSetup() {
 
   useEffect(() => {
     clearPendingBrew()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [clearPendingBrew])
 
   useEffect(() => {
     if (!pending && activeBean?.id) setSelectedBeanId(activeBean.id)
-  }, [activeBean]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeBean, pending])
 
   const selectedBean = beans.find(b => b.id === selectedBeanId) || activeBean
   const ratio = formatRatio(dose, water)

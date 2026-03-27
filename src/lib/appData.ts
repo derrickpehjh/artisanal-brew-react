@@ -170,19 +170,17 @@ export function setUser(user: User | null): void { _user = user }
 export function getBeans(): Bean[] { return _beans }
 export function getBrews(): Brew[] { return [..._brews].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) }
 
+function validateBean(bean: Bean): void {
+  if (!bean.name) throw new Error('Bean name is required.')
+  if (!bean.origin) throw new Error('Origin is required.')
+  if (!Number.isFinite(bean.totalGrams) || bean.totalGrams <= 0) throw new Error('Total grams must be greater than 0.')
+  if (!Number.isFinite(bean.remainingGrams) || bean.remainingGrams < 0) throw new Error('Remaining grams must be 0 or higher.')
+  if (bean.remainingGrams > bean.totalGrams) throw new Error('Remaining grams cannot exceed total grams.')
+}
+
 export async function addBean(bean: Partial<Bean>): Promise<Bean> {
   const normalized = normalizeBeanPayload(bean)
-  if (!normalized.name) throw new Error('Bean name is required.')
-  if (!normalized.origin) throw new Error('Origin is required.')
-  if (!Number.isFinite(normalized.totalGrams) || normalized.totalGrams <= 0) {
-    throw new Error('Total grams must be greater than 0.')
-  }
-  if (!Number.isFinite(normalized.remainingGrams) || normalized.remainingGrams < 0) {
-    throw new Error('Remaining grams must be 0 or higher.')
-  }
-  if (normalized.remainingGrams > normalized.totalGrams) {
-    throw new Error('Remaining grams cannot exceed total grams.')
-  }
+  validateBean(normalized)
 
   if (_user && isSupabaseConfigured && supabase) {
     const { error } = await dbWriteTimeout(
@@ -201,18 +199,7 @@ export async function updateBean(id: string, data: Partial<Bean>): Promise<Bean 
   if (idx === -1) return undefined
 
   const merged = normalizeBeanPayload({ ..._beans[idx], ...data })
-  if (!merged.name) throw new Error('Bean name is required.')
-  if (!merged.origin) throw new Error('Origin is required.')
-  if (!Number.isFinite(merged.totalGrams) || merged.totalGrams <= 0) {
-    throw new Error('Total grams must be greater than 0.')
-  }
-  if (!Number.isFinite(merged.remainingGrams) || merged.remainingGrams < 0) {
-    throw new Error('Remaining grams must be 0 or higher.')
-  }
-  if (merged.remainingGrams > merged.totalGrams) {
-    throw new Error('Remaining grams cannot exceed total grams.')
-  }
-
+  validateBean(merged)
   _beans[idx] = merged
   if (_user && isSupabaseConfigured && supabase) {
     const { error } = await dbWriteTimeout(
@@ -349,7 +336,7 @@ export async function resetAllData(userId: string): Promise<void> {
 const EXTRACTION_MIN = 18
 const EXTRACTION_MAX = 22
 
-export function getStats(beans: Bean[], brews: Brew[]): BrewStats {
+export function getStats(_beans: Bean[], brews: Brew[]): BrewStats {
   const empty = { avgRating: 0, totalBrews: 0, consistencyPct: 0, weeklyVolumeLiters: 0, weeklyYields: Array(7).fill(0), trendPct: 0, avgExtraction: null, extractionInRange: 0 }
   if (!brews.length) return empty
   const sorted = [...brews].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -387,7 +374,6 @@ export function getStats(beans: Bean[], brews: Brew[]): BrewStats {
   const prevAvg = prevWeekly.length ? prevWeekly.reduce((s, b) => s + b.rating, 0) / prevWeekly.length : 0
   const trendPct = prevAvg > 0 ? Math.round(((weeklyAvg - prevAvg) / prevAvg) * 100) : 0
 
-  void beans
   return { avgRating: Number(avg.toFixed(1)), totalBrews: brews.length, consistencyPct, weeklyVolumeLiters: Number(vol.toFixed(1)), weeklyYields: yields, trendPct, avgExtraction, extractionInRange }
 }
 
