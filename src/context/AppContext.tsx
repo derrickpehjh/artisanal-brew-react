@@ -26,9 +26,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(async (currentUser: User) => {
     if (!currentUser) return
     try {
-      const data = await loadData(currentUser)
-      setBeans([...data.beans])
-      setBrews([...data.brews])
+      await loadData(currentUser)
+      setBeans([...getBeans()])
+      setBrews(getBrews())
     } catch (e) {
       console.error('Data load failed:', e)
     }
