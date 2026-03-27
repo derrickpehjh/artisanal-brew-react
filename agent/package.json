@@ -4,12 +4,15 @@
   "description": "Daily coffee-brewing simulation agent for Artisanal Brew",
   "type": "module",
   "scripts": {
-    "start":     "tsx src/index.ts",
-    "dry-run":   "tsx src/index.ts --dry-run",
+    "start":        "tsx src/index.ts",
+    "dry-run":      "tsx src/index.ts --dry-run",
+    "loop":         "tsx src/agent-loop.ts",
+    "loop-dry-run": "tsx src/agent-loop.ts --dry-run",
     "typecheck": "tsc --noEmit",
     "build":     "tsc"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
     "@supabase/supabase-js": "^2.100.0"
   },
   "devDependencies": {
