@@ -200,11 +200,34 @@ export default function Dashboard() {
                   </div>
                   {stats.avgExtraction < 18 && <p className="text-[10px] text-error mt-2">Under-extracted — try a finer grind or longer steep</p>}
                   {stats.avgExtraction > 22 && <p className="text-[10px] text-error mt-2">Over-extracted — try a coarser grind or shorter time</p>}
+                  <p className="text-[9px] text-on-surface-variant/50 mt-3 pt-3 border-t border-outline-variant/10">
+                    Derived from your logged dose & water — not estimated
+                  </p>
                 </>
               ) : (
-                <div className="text-center py-3">
-                  <span className="material-symbols-outlined text-3xl opacity-20 block mb-2 text-primary">science</span>
-                  <p className="text-xs text-on-surface-variant">Complete taste analysis after each brew to track your pour over extraction.</p>
+                <div className="py-2">
+                  <div className="flex gap-3 mb-3">
+                    <span className="material-symbols-outlined text-2xl shrink-0 text-primary opacity-30 mt-0.5">info</span>
+                    <div>
+                      <p className="text-xs font-bold text-primary mb-1">How extraction is measured</p>
+                      <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                        Each time you log a brew, the app calculates extraction yield from the <span className="font-bold">dose and water</span> you enter — no guessing. The result is stored with that brew session.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mb-4">
+                    <span className="material-symbols-outlined text-2xl shrink-0 text-primary opacity-30 mt-0.5">route</span>
+                    <div>
+                      <p className="text-xs font-bold text-primary mb-1">To see your data here</p>
+                      <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                        Start a brew → complete the guided timer → finish Taste Analysis. The chart above will populate with your real numbers.
+                      </p>
+                    </div>
+                  </div>
+                  <Link to="/brew-setup" className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-surface-container text-primary text-[11px] font-bold uppercase tracking-widest hover:bg-surface-container-high transition-colors">
+                    <span className="material-symbols-outlined text-[16px]">play_arrow</span>
+                    Start a Brew
+                  </Link>
                 </div>
               )}
             </div>
