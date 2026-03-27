@@ -13,7 +13,7 @@
 
 import 'dotenv/config'
 import { PERSONA, BEAN_CATALOG } from './persona.js'
-import { fetchBeans, fetchBrews, insertBean, insertBrew, updateBeanGrams } from './supabase.js'
+import { fetchBeans, fetchBrews, insertBean, insertBrew, updateBeanGrams, ensureAuth } from './supabase.js'
 import { generateBrewParams, formatRatio } from './brew-engine.js'
 import { generateTasteProfile, generateFallbackNotes } from './taste-engine.js'
 import { checkLowBeans, selectBeanForBrew, generateNewBean } from './bean-manager.js'
@@ -83,6 +83,10 @@ async function main(): Promise<void> {
   log(`Artisanal Brew Agent — ${PERSONA.name}, ${PERSONA.location}`)
   log(isDryRun ? 'Mode: DRY RUN (no data will be written)' : 'Mode: LIVE')
   sep()
+
+  // ── 0. Authenticate ───────────────────────────────────────────────────────
+  await ensureAuth()
+  log('Authenticated with Supabase.')
 
   // ── 1. Load current state ─────────────────────────────────────────────────
   log('Loading data from Supabase…')

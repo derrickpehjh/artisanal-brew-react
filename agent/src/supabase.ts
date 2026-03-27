@@ -3,7 +3,7 @@ import type { AgentBean, AgentBrew } from './types.js'
 
 function getSupabaseClient() {
   const url = process.env.VITE_SUPABASE_URL
-  // Prefer service role key (bypasses RLS); fall back to anon key
+  // Prefer service role key (bypasses RLS); fall back to anon key + email/password auth
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.VITE_SUPABASE_KEY
 
   if (!url || !key) {
@@ -16,6 +16,28 @@ function getSupabaseClient() {
 }
 
 export const supabase = getSupabaseClient()
+
+/**
+ * Sign in with email/password when no service role key is available.
+ * Called once at agent startup; the session is held in memory for the run.
+ * No-op if SUPABASE_SERVICE_ROLE_KEY is set (RLS already bypassed).
+ */
+export async function ensureAuth(): Promise<void> {
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) return
+
+  const email    = process.env.SUPABASE_AGENT_EMAIL
+  const password = process.env.SUPABASE_AGENT_PASSWORD
+
+  if (!email || !password) {
+    throw new Error(
+      'Using anon key but SUPABASE_AGENT_EMAIL / SUPABASE_AGENT_PASSWORD are not set.\n' +
+      'Either add a SUPABASE_SERVICE_ROLE_KEY or provide agent credentials in .env'
+    )
+  }
+
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) throw new Error(`Supabase sign-in failed: ${error.message}`)
+}
 
 // ---------------------------------------------------------------------------
 // Beans
