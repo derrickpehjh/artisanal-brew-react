@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
@@ -7,6 +7,22 @@ import Stars from '../components/ui/Stars'
 export default function Dashboard() {
   const { beans, brews, stats, getActiveBean, setActiveBeanId, formatDate, formatRatio, getTip } = useApp()
   const effRingRef = useRef<SVGCircleElement>(null)
+
+  // Build the last-7-days activity grid with real day names and dates
+  const weekActivity = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(Date.now() - (6 - i) * 86400000)
+      const dayStr = d.toDateString()
+      const dayBrews = brews.filter(b => new Date(b.date).toDateString() === dayStr)
+      return {
+        dayLabel: d.toLocaleString('default', { weekday: 'short' }).slice(0, 2),
+        dateNum: d.getDate(),
+        isToday: i === 6,
+        count: dayBrews.length,
+        avgRating: dayBrews.length ? dayBrews.reduce((s, b) => s + b.rating, 0) / dayBrews.length : 0,
+      }
+    })
+  }, [brews])
 
   const bean = getActiveBean()
   const last = brews[0] || null
@@ -232,45 +248,85 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* Weekly trends */}
+            {/* Weekly Activity */}
             <div>
-              <h3 className="font-headline text-xl text-primary mb-4">Weekly Trends</h3>
-              <div className="flex flex-col gap-4">
-                <div className="bg-surface-container-low p-5 rounded-xl">
-                  <div className="flex justify-between items-center mb-3">
-                    <div>
-                      <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide">Avg Rating</span>
-                      <p className="text-[9px] text-on-surface-variant/60 mt-0.5">vs previous 7 days</p>
-                    </div>
-                    <span className={`text-xs font-bold flex items-center gap-1 ${stats.trendPct >= 0 ? 'text-tertiary' : 'text-error'}`}>
-                      <span className="material-symbols-outlined text-sm">{stats.trendPct >= 0 ? 'trending_up' : 'trending_down'}</span>
-                      {stats.trendPct > 0 ? '+' : ''}{stats.trendPct}%
-                    </span>
-                  </div>
-                  <div className="flex items-end gap-1.5 h-12 mb-1">
-                    {stats.weeklyYields.map((y, i) => {
-                      const isRecent = i >= 5
-                      const pct = Math.max(y, 4)
-                      return <div key={i} className={`flex-1 ${isRecent ? 'bg-primary' : 'bg-surface-container-highest'} rounded-t-sm transition-all duration-500`} style={{ height: pct + '%' }}></div>
-                    })}
-                  </div>
-                  {/* Day labels */}
-                  <div className="flex gap-1.5">
-                    {['M','T','W','T','F','S','S'].map((d, i) => (
-                      <div key={i} className="flex-1 text-center text-[8px] text-on-surface-variant/50 font-bold">{d}</div>
-                    ))}
-                  </div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-headline text-xl text-primary">This Week</h3>
+                {stats.trendPct !== 0 && (
+                  <span className={`text-[10px] font-bold flex items-center gap-0.5 ${stats.trendPct > 0 ? 'text-tertiary' : 'text-error'}`}>
+                    <span className="material-symbols-outlined text-sm">{stats.trendPct > 0 ? 'trending_up' : 'trending_down'}</span>
+                    {stats.trendPct > 0 ? '+' : ''}{stats.trendPct}% vs last week
+                  </span>
+                )}
+              </div>
+
+              {/* 7-day grid */}
+              <div className="bg-surface-container-low rounded-xl p-4">
+                <div className="grid grid-cols-7 gap-1">
+                  {weekActivity.map((day, i) => {
+                    const ratingColor =
+                      day.count === 0 ? ''
+                      : day.avgRating >= 4.5 ? 'text-tertiary'
+                      : day.avgRating >= 3.5 ? 'text-primary'
+                      : 'text-error'
+                    return (
+                      <div
+                        key={i}
+                        className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg transition-colors ${
+                          day.isToday ? 'bg-primary text-white' : day.count > 0 ? 'bg-surface-container' : ''
+                        }`}
+                      >
+                        {/* Day letter */}
+                        <span className={`text-[9px] font-bold uppercase ${day.isToday ? 'text-white/70' : 'text-on-surface-variant/60'}`}>
+                          {day.dayLabel}
+                        </span>
+                        {/* Date number */}
+                        <span className={`text-xs font-bold ${day.isToday ? 'text-white' : 'text-primary'}`}>
+                          {day.dateNum}
+                        </span>
+                        {/* Rating or empty */}
+                        {day.count > 0 ? (
+                          <span className={`text-[10px] font-bold leading-none ${day.isToday ? 'text-white' : ratingColor}`}>
+                            {day.avgRating.toFixed(1)}★
+                          </span>
+                        ) : (
+                          <span className={`text-[10px] leading-none ${day.isToday ? 'text-white/40' : 'text-on-surface-variant/25'}`}>—</span>
+                        )}
+                        {/* Brew count dot */}
+                        {day.count > 1 && (
+                          <span className={`text-[8px] font-bold ${day.isToday ? 'text-white/60' : 'text-on-surface-variant/50'}`}>
+                            ×{day.count}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
-                <div className="bg-surface-container-low p-5 rounded-xl">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide">Total Volume</span>
-                    <span className="text-sm font-headline text-primary">{stats.weeklyVolumeLiters}L</span>
+
+                {/* Summary row */}
+                <div className="flex justify-between items-center mt-3 pt-3 border-t border-outline-variant/10">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-on-surface-variant/60">Brews</p>
+                      <p className="text-sm font-bold text-primary">{weekActivity.reduce((s, d) => s + d.count, 0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-on-surface-variant/60">Avg Rating</p>
+                      <p className="text-sm font-bold text-primary">
+                        {(() => {
+                          const days = weekActivity.filter(d => d.count > 0)
+                          return days.length ? (days.reduce((s, d) => s + d.avgRating, 0) / days.length).toFixed(1) + '★' : '—'
+                        })()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-on-surface-variant/60">Volume</p>
+                      <p className="text-sm font-bold text-primary">{stats.weeklyVolumeLiters}L</p>
+                    </div>
                   </div>
-                  <p className="text-[10px] text-on-surface-variant mb-3">Water used in last 7 days</p>
-                  <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-primary-container h-full rounded-full transition-all duration-700" style={{ width: Math.min(stats.weeklyVolumeLiters / 5 * 100, 100) + '%' }}></div>
-                  </div>
-                  <p className="text-[9px] text-on-surface-variant/50 mt-1 text-right">5L reference</p>
+                  <Link to="/analytics" className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide hover:text-primary transition-colors flex items-center gap-0.5">
+                    Full log <span className="material-symbols-outlined text-[12px]">arrow_forward</span>
+                  </Link>
                 </div>
               </div>
             </div>
