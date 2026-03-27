@@ -247,10 +247,20 @@ export default function BrewSetup() {
                 </div>
               </div>
               <div className="relative z-10 space-y-3 mt-auto">
-                <button onClick={startGuidedMode} className="w-full bg-surface-bright text-primary py-4 rounded-md font-bold flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 shadow-xl transition-all text-sm uppercase tracking-widest">
-                  Enter Guided Mode
-                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>play_arrow</span>
-                </button>
+                {selectedBean && selectedBean.remainingGrams <= 0 ? (
+                  <div className="w-full bg-error/20 border border-error/30 py-4 rounded-md flex flex-col items-center gap-1">
+                    <div className="flex items-center gap-2 text-error font-bold text-sm">
+                      <span className="material-symbols-outlined text-[18px]">block</span>
+                      No stock remaining
+                    </div>
+                    <p className="text-[10px] text-white/60">Restock {selectedBean.name} or select a different bean</p>
+                  </div>
+                ) : (
+                  <button onClick={startGuidedMode} className="w-full bg-surface-bright text-primary py-4 rounded-md font-bold flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 shadow-xl transition-all text-sm uppercase tracking-widest">
+                    Enter Guided Mode
+                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>play_arrow</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -29,6 +29,7 @@ export default function Dashboard() {
   const otherBeans = beans.filter(b => b.id !== bean?.id)
 
   const stockPct = bean?.totalGrams ? Math.round((bean.remainingGrams / bean.totalGrams) * 100) : 0
+  const activeIsEmpty = !!bean?.id && bean.remainingGrams <= 0
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -61,15 +62,24 @@ export default function Dashboard() {
                     <h3 className="font-headline text-base leading-tight text-primary truncate">{bean.name}</h3>
                     <p className="text-[11px] text-on-surface-variant mt-0.5">{bean.process}</p>
                   </div>
-                  <span className="shrink-0 text-[9px] font-bold px-2 py-0.5 bg-tertiary-fixed text-tertiary rounded-full uppercase tracking-wide">Active</span>
+                  {activeIsEmpty
+                    ? <span className="shrink-0 text-[9px] font-bold px-2 py-0.5 bg-error-container text-error rounded-full uppercase tracking-wide">Empty</span>
+                    : <span className="shrink-0 text-[9px] font-bold px-2 py-0.5 bg-tertiary-fixed text-tertiary rounded-full uppercase tracking-wide">Active</span>
+                  }
                 </div>
                 <div className="w-full bg-surface-container h-1.5 rounded-full overflow-hidden mb-2">
                   <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: stockPct + '%' }}></div>
                 </div>
                 <div className="flex justify-between text-[10px] font-bold text-on-surface-variant mb-4">
-                  <span>{bean.remainingGrams}g REMAINING</span>
+                  <span className={activeIsEmpty ? 'text-error' : ''}>{bean.remainingGrams}g REMAINING</span>
                   <span>TOTAL {bean.totalGrams}g</span>
                 </div>
+                {activeIsEmpty && (
+                  <div className="mb-4 flex items-center gap-1.5 text-[10px] text-error font-bold">
+                    <span className="material-symbols-outlined text-[14px]">warning</span>
+                    Out of stock — restock to brew
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-2 pt-3 border-t border-outline-variant/10">
                   <div>
                     <p className="text-[9px] uppercase font-bold text-on-surface-variant/60 mb-0.5">Roast Level</p>
@@ -90,7 +100,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-bold text-primary truncate">{b.name}</h4>
-                    <p className="text-[11px] text-on-surface-variant">{b.process} &bull; {b.remainingGrams}g</p>
+                    <p className="text-[11px] text-on-surface-variant">{b.process} &bull; {b.remainingGrams <= 0 ? <span className="text-error font-bold">Empty</span> : `${b.remainingGrams}g`}</p>
                   </div>
                   <span className="material-symbols-outlined text-on-surface-variant text-[16px] opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
                 </div>
@@ -107,12 +117,23 @@ export default function Dashboard() {
               <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=900&q=80" alt="Pour over coffee brewing" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-transparent"></div>
               <div className="absolute inset-0 flex flex-col justify-end p-10">
-                <h2 className="font-headline text-4xl text-white mb-2 leading-tight">Ready for the first cup?</h2>
-                <p className="text-white/80 text-sm mb-6 max-w-xs">Using current inventory: {bean?.name}, {bean?.roastLevel} Roast.</p>
-                <Link to="/brew-setup" className="w-fit px-8 py-4 bg-white text-primary rounded-md font-bold text-sm tracking-widest flex items-center gap-3 hover:bg-surface-bright transition-all active:scale-95 shadow-xl uppercase">
-                  Start New Brew
-                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>play_arrow</span>
-                </Link>
+                <h2 className="font-headline text-4xl text-white mb-2 leading-tight">{activeIsEmpty ? 'Bean cellar is empty' : 'Ready for the first cup?'}</h2>
+                <p className="text-white/80 text-sm mb-6 max-w-xs">
+                  {activeIsEmpty
+                    ? `${bean?.name} is out of stock. Restock or switch to a different bean to brew.`
+                    : `Using current inventory: ${bean?.name}, ${bean?.roastLevel} Roast.`}
+                </p>
+                {activeIsEmpty ? (
+                  <Link to="/beans" className="w-fit px-8 py-4 bg-white/20 text-white/80 rounded-md font-bold text-sm tracking-widest flex items-center gap-3 hover:bg-white/30 transition-all shadow-xl uppercase">
+                    <span className="material-symbols-outlined text-[18px]">add_circle</span>
+                    Manage Beans
+                  </Link>
+                ) : (
+                  <Link to="/brew-setup" className="w-fit px-8 py-4 bg-white text-primary rounded-md font-bold text-sm tracking-widest flex items-center gap-3 hover:bg-surface-bright transition-all active:scale-95 shadow-xl uppercase">
+                    Start New Brew
+                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>play_arrow</span>
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -276,15 +297,12 @@ export default function Dashboard() {
                           day.isToday ? 'bg-primary text-white' : day.count > 0 ? 'bg-surface-container' : ''
                         }`}
                       >
-                        {/* Day letter */}
                         <span className={`text-[9px] font-bold uppercase ${day.isToday ? 'text-white/70' : 'text-on-surface-variant/60'}`}>
                           {day.dayLabel}
                         </span>
-                        {/* Date number */}
                         <span className={`text-xs font-bold ${day.isToday ? 'text-white' : 'text-primary'}`}>
                           {day.dateNum}
                         </span>
-                        {/* Rating or empty */}
                         {day.count > 0 ? (
                           <span className={`text-[10px] font-bold leading-none ${day.isToday ? 'text-white' : ratingColor}`}>
                             {day.avgRating.toFixed(1)}★
@@ -292,7 +310,6 @@ export default function Dashboard() {
                         ) : (
                           <span className={`text-[10px] leading-none ${day.isToday ? 'text-white/40' : 'text-on-surface-variant/25'}`}>—</span>
                         )}
-                        {/* Brew count dot */}
                         {day.count > 1 && (
                           <span className={`text-[8px] font-bold ${day.isToday ? 'text-white/60' : 'text-on-surface-variant/50'}`}>
                             ×{day.count}

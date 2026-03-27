@@ -135,9 +135,16 @@ export default function BeanDetailModal({
               >
                 {isActiveBean ? 'Currently Active Bean' : 'Set as Active Bean'}
               </button>
-              <button onClick={onBrew} className="w-full brew-gradient py-3 rounded-xl text-white text-sm font-bold hover:opacity-90 active:scale-95 transition-all">
-                Brew This Bean
-              </button>
+              {bean.remainingGrams <= 0 ? (
+                <div className="w-full py-3 rounded-xl bg-error-container/30 text-error text-sm font-bold text-center flex items-center justify-center gap-2">
+                  <span className="material-symbols-outlined text-[16px]">block</span>
+                  Out of Stock — Refill to Brew
+                </div>
+              ) : (
+                <button onClick={onBrew} className="w-full brew-gradient py-3 rounded-xl text-white text-sm font-bold hover:opacity-90 active:scale-95 transition-all">
+                  Brew This Bean
+                </button>
+              )}
               <button onClick={onEdit} className="w-full bg-surface-container py-3 rounded-xl text-on-surface-variant text-sm font-medium hover:bg-surface-container-high transition-colors">
                 Edit Details
               </button>
