@@ -201,7 +201,7 @@ export default function Dashboard() {
                   {stats.avgExtraction < 18 && <p className="text-[10px] text-error mt-2">Under-extracted — try a finer grind or longer steep</p>}
                   {stats.avgExtraction > 22 && <p className="text-[10px] text-error mt-2">Over-extracted — try a coarser grind or shorter time</p>}
                   <p className="text-[9px] text-on-surface-variant/50 mt-3 pt-3 border-t border-outline-variant/10">
-                    Derived from your logged dose & water — not estimated
+                    Estimated from your dose & water ratio (no refractometer needed)
                   </p>
                 </>
               ) : (

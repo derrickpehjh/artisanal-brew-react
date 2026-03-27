@@ -65,7 +65,7 @@ export default function BrewSetup() {
   const fillWater = Math.min((water / 600) * 100, 100)
   const fillTemp = Math.min(((temp - 60) / 40) * 100, 100)
   const method = METHODS.find(m => m.id === selectedMethod) || METHODS[0]
-  const tds = (dose / water) * 100 * 1.2
+  const estExtraction = (water / dose) * 1.2
   const lastBrew = brews[0] || null
   const brewsLeft = selectedBean?.remainingGrams ? Math.floor(selectedBean.remainingGrams / dose) : 0
   const beanBrews = brews.filter(b => b.beanId === selectedBeanId)
@@ -109,7 +109,7 @@ export default function BrewSetup() {
       ratio: formatRatio(dose, water),
       grindSize: grind,
       brewTime: phasesDuration(selectedMethod),
-      extraction: Number(((dose / water) * 100 * 1.2).toFixed(1)),
+      extraction: Number(((water / dose) * 1.2).toFixed(1)),
     })
     navigate('/guided-brew')
   }
@@ -260,7 +260,7 @@ export default function BrewSetup() {
         <section className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-8 pt-8 border-t border-outline-variant/15">
           {[
             { icon: 'history', label: 'Last brewed', value: lastBrew ? formatDate(lastBrew.date) : 'Never' },
-            { icon: 'monitoring', label: 'Predicted TDS', value: `${(tds * 0.9).toFixed(2)}% – ${(tds * 1.1).toFixed(2)}%` },
+            { icon: 'monitoring', label: 'Est. Extraction', value: `${(estExtraction * 0.9).toFixed(1)}% – ${(estExtraction * 1.1).toFixed(1)}%` },
             { icon: 'inventory_2', label: 'Bean Stock', value: `~${brewsLeft} brews left (${selectedBean?.remainingGrams || 0}g)` },
             { icon: 'star', label: 'My Rating', value: myBeanAvgRating ? `${myBeanAvgRating} / 5 (${beanBrews.length} brew${beanBrews.length !== 1 ? 's' : ''})` : 'No brews yet', fill: true },
           ].map(s => (

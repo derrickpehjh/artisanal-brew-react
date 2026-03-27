@@ -167,7 +167,7 @@ export default function TasteAnalysis() {
     ['Method', brew.method ?? '—'],
     ['Ratio', brew.ratio || formatRatio(brew.dose ?? 18, brew.water ?? 300)],
     ['Grind', brew.grindSize ?? '—'],
-    ['TDS Est.', (((brew.dose ?? 18) / (brew.water ?? 300)) * 100 * 1.2).toFixed(2) + '%'],
+    ['Extraction Est.', (((brew.water ?? 300) / (brew.dose ?? 18)) * 1.2).toFixed(1) + '%'],
   ] : [['Method', '—'], ['Ratio', '—'], ['Grind', '—'], ['TDS Est.', '—']]
 
   return (

@@ -134,7 +134,7 @@ export default function Recipes() {
       beanId: bean?.id || r.beanId, beanName: r.beanName,
       method: r.method, dose: r.dose, water: r.water, temp: r.temp,
       ratio: r.ratio, grindSize: r.grindSize, brewTime: r.brewTime,
-      extraction: Number(((r.dose / r.water) * 100 * 1.2).toFixed(1)),
+      extraction: Number(((r.water / r.dose) * 1.2).toFixed(1)),
     })
     if (bean?.id) setActiveBeanId(bean.id)
     navigate('/brew-setup')
