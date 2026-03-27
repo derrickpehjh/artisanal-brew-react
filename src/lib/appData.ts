@@ -325,8 +325,13 @@ export async function resetAllData(userId: string): Promise<void> {
   localStorage.removeItem(cacheKey('brews'))
 }
 
+// Target extraction range for all brew methods (SCA standard)
+const EXTRACTION_MIN = 18
+const EXTRACTION_MAX = 22
+
 export function getStats(beans: Bean[], brews: Brew[]): BrewStats {
-  if (!brews.length) return { avgRating: 0, totalBrews: 0, consistencyPct: 0, weeklyVolumeLiters: 0, weeklyYields: Array(7).fill(0), trendPct: 0 }
+  const empty = { avgRating: 0, totalBrews: 0, consistencyPct: 0, weeklyVolumeLiters: 0, weeklyYields: Array(7).fill(0), trendPct: 0, avgExtraction: null, extractionInRange: 0 }
+  if (!brews.length) return empty
   const sorted = [...brews].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   const avg = brews.reduce((s, b) => s + b.rating, 0) / brews.length
   const weekAgo = Date.now() - 7 * 86400000
@@ -335,16 +340,35 @@ export function getStats(beans: Bean[], brews: Brew[]): BrewStats {
   const prevWeekly = brews.filter(b => { const t = new Date(b.date).getTime(); return t > prevWeekAgo && t <= weekAgo })
   const vol = weekly.reduce((s, b) => s + b.water, 0) / 1000
   const last7 = sorted.slice(0, 7)
-  const consistencyPct = last7.length ? Math.round((last7.filter(b => b.rating >= 3).length / last7.length) * 100) : 0
+
+  // Extraction stats: use actual extraction % where available
+  const brewsWithExtraction = last7.filter(b => b.extraction != null && b.extraction > 0)
+  const avgExtraction = brewsWithExtraction.length
+    ? Number((brewsWithExtraction.reduce((s, b) => s + b.extraction!, 0) / brewsWithExtraction.length).toFixed(1))
+    : null
+  const extractionInRange = brewsWithExtraction.length
+    ? Math.round((brewsWithExtraction.filter(b => b.extraction! >= EXTRACTION_MIN && b.extraction! <= EXTRACTION_MAX).length / brewsWithExtraction.length) * 100)
+    : 0
+
+  // Consistency: % of last 7 brews with extraction in target range (falls back to rating >= 3 if no extraction data)
+  const consistencyPct = brewsWithExtraction.length
+    ? extractionInRange
+    : last7.length ? Math.round((last7.filter(b => b.rating >= 3).length / last7.length) * 100) : 0
+
   const yields: number[] = []
   for (let i = 6; i >= 0; i--) {
     const ago = new Date(Date.now() - i * 86400000).toDateString()
     const day = brews.filter(b => new Date(b.date).toDateString() === ago)
     yields.push(day.length ? Math.min(100, day.reduce((s, b) => s + b.rating, 0) / day.length * 20) : 0)
   }
-  const trendPct = prevWeekly.length ? Math.round(((weekly.length - prevWeekly.length) / prevWeekly.length) * 100) : 0
-  void beans // used for future expansion
-  return { avgRating: Number(avg.toFixed(1)), totalBrews: brews.length, consistencyPct, weeklyVolumeLiters: Number(vol.toFixed(1)), weeklyYields: yields, trendPct }
+
+  // trendPct: compare avg rating this week vs previous week (not brew count)
+  const weeklyAvg = weekly.length ? weekly.reduce((s, b) => s + b.rating, 0) / weekly.length : 0
+  const prevAvg = prevWeekly.length ? prevWeekly.reduce((s, b) => s + b.rating, 0) / prevWeekly.length : 0
+  const trendPct = prevAvg > 0 ? Math.round(((weeklyAvg - prevAvg) / prevAvg) * 100) : 0
+
+  void beans
+  return { avgRating: Number(avg.toFixed(1)), totalBrews: brews.length, consistencyPct, weeklyVolumeLiters: Number(vol.toFixed(1)), weeklyYields: yields, trendPct, avgExtraction, extractionInRange }
 }
 
 // Utilities

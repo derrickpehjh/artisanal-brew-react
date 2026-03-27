@@ -44,7 +44,7 @@ function makeContext(overrides: Partial<AppContextValue> = {}): AppContextValue 
     brews: [mockBrew],
     loading: false,
     initialized: true,
-    stats: { avgRating: 4, totalBrews: 1, consistencyPct: 80, weeklyVolumeLiters: 1.5, weeklyYields: [20, 40, 60, 80, 100, 100, 80], trendPct: 5 },
+    stats: { avgRating: 4, totalBrews: 1, consistencyPct: 80, weeklyVolumeLiters: 1.5, weeklyYields: [20, 40, 60, 80, 100, 100, 80], trendPct: 5, avgExtraction: null, extractionInRange: 0 },
     isSupabaseConfigured: true,
     supabase: null,
     refresh: vi.fn(),

@@ -146,9 +146,11 @@ export default function Dashboard() {
             </section>
           </div>
 
-          {/* Right: Efficiency */}
+          {/* Right: Brew Insights */}
           <div className="col-span-1 md:col-span-3 flex flex-col gap-8">
-            <h2 className="font-headline text-2xl text-primary">Efficiency</h2>
+            <h2 className="font-headline text-2xl text-primary">Brew Insights</h2>
+
+            {/* Consistency ring */}
             <div className="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_4px_20px_rgba(62,39,35,0.04)] flex flex-col items-center text-center">
               <div className="relative w-36 h-36 mb-5">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 144 144">
@@ -160,37 +162,92 @@ export default function Dashboard() {
                 </div>
               </div>
               <h3 className="font-bold text-sm text-primary mb-1">Consistency Rating</h3>
-              <p className="text-xs text-on-surface-variant leading-relaxed">Last 7 brews within target extraction windows.</p>
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                {stats.avgExtraction != null
+                  ? <>Last 7 brews with extraction in 18–22% target window</>
+                  : <>Last 7 brews rated 3★ or above — log taste analysis to track extraction</>}
+              </p>
             </div>
 
+            {/* Extraction Window */}
+            <div className="bg-surface-container-lowest rounded-2xl p-5 shadow-[0_4px_20px_rgba(62,39,35,0.04)]">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide">Extraction Window</h3>
+                <span className="text-[9px] font-bold px-2 py-0.5 bg-surface-container text-on-surface-variant rounded-full uppercase tracking-wide">18–22% target</span>
+              </div>
+              {stats.avgExtraction != null ? (
+                <>
+                  <div className="relative h-6 mb-2">
+                    {/* full track */}
+                    <div className="absolute inset-y-0 left-0 right-0 bg-surface-container-highest rounded-full my-auto h-2 top-1/2 -translate-y-1/2"></div>
+                    {/* target zone 18-22% mapped across a 14-26% display range */}
+                    <div className="absolute h-2 top-1/2 -translate-y-1/2 bg-tertiary-fixed/40 rounded-full" style={{ left: `${(18 - 14) / 12 * 100}%`, width: `${(22 - 18) / 12 * 100}%` }}></div>
+                    {/* avg extraction marker */}
+                    <div className="absolute w-3 h-3 bg-primary rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2 shadow" style={{ left: `${Math.min(100, Math.max(0, (stats.avgExtraction - 14) / 12 * 100))}%` }}></div>
+                  </div>
+                  <div className="flex justify-between text-[9px] text-on-surface-variant mb-3">
+                    <span>14%</span><span>18%</span><span>22%</span><span>26%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-on-surface-variant/60 mb-0.5">Avg Extraction</p>
+                      <p className={`text-base font-headline font-bold ${stats.avgExtraction < 18 ? 'text-error' : stats.avgExtraction > 22 ? 'text-error' : 'text-tertiary'}`}>{stats.avgExtraction}%</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[9px] uppercase font-bold text-on-surface-variant/60 mb-0.5">In Range</p>
+                      <p className="text-base font-headline font-bold text-primary">{stats.extractionInRange}%</p>
+                    </div>
+                  </div>
+                  {stats.avgExtraction < 18 && <p className="text-[10px] text-error mt-2">Under-extracted — try a finer grind or longer steep</p>}
+                  {stats.avgExtraction > 22 && <p className="text-[10px] text-error mt-2">Over-extracted — try a coarser grind or shorter time</p>}
+                </>
+              ) : (
+                <div className="text-center py-3">
+                  <span className="material-symbols-outlined text-3xl opacity-20 block mb-2 text-primary">science</span>
+                  <p className="text-xs text-on-surface-variant">Complete taste analysis after each brew to track your pour over extraction.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Weekly trends */}
             <div>
               <h3 className="font-headline text-xl text-primary mb-4">Weekly Trends</h3>
               <div className="flex flex-col gap-4">
                 <div className="bg-surface-container-low p-5 rounded-xl">
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide">Avg Rating</span>
+                    <div>
+                      <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide">Avg Rating</span>
+                      <p className="text-[9px] text-on-surface-variant/60 mt-0.5">vs previous 7 days</p>
+                    </div>
                     <span className={`text-xs font-bold flex items-center gap-1 ${stats.trendPct >= 0 ? 'text-tertiary' : 'text-error'}`}>
                       <span className="material-symbols-outlined text-sm">{stats.trendPct >= 0 ? 'trending_up' : 'trending_down'}</span>
                       {stats.trendPct > 0 ? '+' : ''}{stats.trendPct}%
                     </span>
                   </div>
-                  <div className="flex items-end gap-1.5 h-12">
+                  <div className="flex items-end gap-1.5 h-12 mb-1">
                     {stats.weeklyYields.map((y, i) => {
                       const isRecent = i >= 5
                       const pct = Math.max(y, 4)
                       return <div key={i} className={`flex-1 ${isRecent ? 'bg-primary' : 'bg-surface-container-highest'} rounded-t-sm transition-all duration-500`} style={{ height: pct + '%' }}></div>
                     })}
                   </div>
+                  {/* Day labels */}
+                  <div className="flex gap-1.5">
+                    {['M','T','W','T','F','S','S'].map((d, i) => (
+                      <div key={i} className="flex-1 text-center text-[8px] text-on-surface-variant/50 font-bold">{d}</div>
+                    ))}
+                  </div>
                 </div>
                 <div className="bg-surface-container-low p-5 rounded-xl">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide">Total Volume</span>
-                    <span className="text-sm font-headline text-primary">{stats.weeklyVolumeLiters} Liters</span>
+                    <span className="text-sm font-headline text-primary">{stats.weeklyVolumeLiters}L</span>
                   </div>
-                  <p className="text-[10px] text-on-surface-variant mb-3">Last 7 Days vs Previous Period</p>
+                  <p className="text-[10px] text-on-surface-variant mb-3">Water used in last 7 days</p>
                   <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
                     <div className="bg-primary-container h-full rounded-full transition-all duration-700" style={{ width: Math.min(stats.weeklyVolumeLiters / 5 * 100, 100) + '%' }}></div>
                   </div>
+                  <p className="text-[9px] text-on-surface-variant/50 mt-1 text-right">5L reference</p>
                 </div>
               </div>
             </div>
