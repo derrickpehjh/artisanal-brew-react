@@ -44,9 +44,11 @@ export default function BeanCard({ bean, brews, isActive, onClick }: BeanCardPro
     >
       <div className="brew-gradient px-6 pt-6 pb-5 relative">
         {isActive && (
-          <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-on-primary/10 rounded-full px-3 py-1">
-            <span className="w-1.5 h-1.5 bg-on-primary rounded-full"></span>
-            <span className="text-[9px] font-bold text-white/80 uppercase tracking-wide">Active</span>
+          <div className={`absolute top-4 right-4 flex items-center gap-1.5 rounded-full px-3 py-1 ${pct <= 0 ? 'bg-error/30' : 'bg-on-primary/10'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${pct <= 0 ? 'bg-error' : 'bg-on-primary'}`}></span>
+            <span className={`text-[9px] font-bold uppercase tracking-wide ${pct <= 0 ? 'text-error' : 'text-white/80'}`}>
+              {pct <= 0 ? 'Active · Empty' : 'Active'}
+            </span>
           </div>
         )}
         <p className="text-[9px] uppercase tracking-widest text-white/50 font-bold mb-1">{bean.origin}</p>

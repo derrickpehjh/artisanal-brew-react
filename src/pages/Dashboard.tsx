@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
@@ -8,11 +8,28 @@ export default function Dashboard() {
   const { beans, brews, stats, getActiveBean, setActiveBeanId, formatDate, formatRatio, getTip } = useApp()
   const effRingRef = useRef<SVGCircleElement>(null)
 
+  // Build the last-7-days activity grid with real day names and dates
+  const weekActivity = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(Date.now() - (6 - i) * 86400000)
+      const dayStr = d.toDateString()
+      const dayBrews = brews.filter(b => new Date(b.date).toDateString() === dayStr)
+      return {
+        dayLabel: d.toLocaleString('default', { weekday: 'short' }).slice(0, 2),
+        dateNum: d.getDate(),
+        isToday: i === 6,
+        count: dayBrews.length,
+        avgRating: dayBrews.length ? dayBrews.reduce((s, b) => s + b.rating, 0) / dayBrews.length : 0,
+      }
+    })
+  }, [brews])
+
   const bean = getActiveBean()
   const last = brews[0] || null
   const otherBeans = beans.filter(b => b.id !== bean?.id)
 
   const stockPct = bean?.totalGrams ? Math.round((bean.remainingGrams / bean.totalGrams) * 100) : 0
+  const activeIsEmpty = !!bean?.id && bean.remainingGrams <= 0
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -45,15 +62,24 @@ export default function Dashboard() {
                     <h3 className="font-headline text-base leading-tight text-primary truncate">{bean.name}</h3>
                     <p className="text-[11px] text-on-surface-variant mt-0.5">{bean.process}</p>
                   </div>
-                  <span className="shrink-0 text-[9px] font-bold px-2 py-0.5 bg-tertiary-fixed text-tertiary rounded-full uppercase tracking-wide">Active</span>
+                  {activeIsEmpty
+                    ? <span className="shrink-0 text-[9px] font-bold px-2 py-0.5 bg-error-container text-error rounded-full uppercase tracking-wide">Empty</span>
+                    : <span className="shrink-0 text-[9px] font-bold px-2 py-0.5 bg-tertiary-fixed text-tertiary rounded-full uppercase tracking-wide">Active</span>
+                  }
                 </div>
                 <div className="w-full bg-surface-container h-1.5 rounded-full overflow-hidden mb-2">
                   <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: stockPct + '%' }}></div>
                 </div>
                 <div className="flex justify-between text-[10px] font-bold text-on-surface-variant mb-4">
-                  <span>{bean.remainingGrams}g REMAINING</span>
+                  <span className={activeIsEmpty ? 'text-error' : ''}>{bean.remainingGrams}g REMAINING</span>
                   <span>TOTAL {bean.totalGrams}g</span>
                 </div>
+                {activeIsEmpty && (
+                  <div className="mb-4 flex items-center gap-1.5 text-[10px] text-error font-bold">
+                    <span className="material-symbols-outlined text-[14px]">warning</span>
+                    Out of stock — restock to brew
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-2 pt-3 border-t border-outline-variant/10">
                   <div>
                     <p className="text-[9px] uppercase font-bold text-on-surface-variant/60 mb-0.5">Roast Level</p>
@@ -74,7 +100,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-bold text-primary truncate">{b.name}</h4>
-                    <p className="text-[11px] text-on-surface-variant">{b.process} &bull; {b.remainingGrams}g</p>
+                    <p className="text-[11px] text-on-surface-variant">{b.process} &bull; {b.remainingGrams <= 0 ? <span className="text-error font-bold">Empty</span> : `${b.remainingGrams}g`}</p>
                   </div>
                   <span className="material-symbols-outlined text-on-surface-variant text-[16px] opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
                 </div>
@@ -91,12 +117,23 @@ export default function Dashboard() {
               <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=900&q=80" alt="Pour over coffee brewing" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-transparent"></div>
               <div className="absolute inset-0 flex flex-col justify-end p-10">
-                <h2 className="font-headline text-4xl text-white mb-2 leading-tight">Ready for the first cup?</h2>
-                <p className="text-white/80 text-sm mb-6 max-w-xs">Using current inventory: {bean?.name}, {bean?.roastLevel} Roast.</p>
-                <Link to="/brew-setup" className="w-fit px-8 py-4 bg-white text-primary rounded-md font-bold text-sm tracking-widest flex items-center gap-3 hover:bg-surface-bright transition-all active:scale-95 shadow-xl uppercase">
-                  Start New Brew
-                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>play_arrow</span>
-                </Link>
+                <h2 className="font-headline text-4xl text-white mb-2 leading-tight">{activeIsEmpty ? 'Bean cellar is empty' : 'Ready for the first cup?'}</h2>
+                <p className="text-white/80 text-sm mb-6 max-w-xs">
+                  {activeIsEmpty
+                    ? `${bean?.name} is out of stock. Restock or switch to a different bean to brew.`
+                    : `Using current inventory: ${bean?.name}, ${bean?.roastLevel} Roast.`}
+                </p>
+                {activeIsEmpty ? (
+                  <Link to="/beans" className="w-fit px-8 py-4 bg-white/20 text-white/80 rounded-md font-bold text-sm tracking-widest flex items-center gap-3 hover:bg-white/30 transition-all shadow-xl uppercase">
+                    <span className="material-symbols-outlined text-[18px]">add_circle</span>
+                    Manage Beans
+                  </Link>
+                ) : (
+                  <Link to="/brew-setup" className="w-fit px-8 py-4 bg-white text-primary rounded-md font-bold text-sm tracking-widest flex items-center gap-3 hover:bg-surface-bright transition-all active:scale-95 shadow-xl uppercase">
+                    Start New Brew
+                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>play_arrow</span>
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -201,7 +238,7 @@ export default function Dashboard() {
                   {stats.avgExtraction < 18 && <p className="text-[10px] text-error mt-2">Under-extracted — try a finer grind or longer steep</p>}
                   {stats.avgExtraction > 22 && <p className="text-[10px] text-error mt-2">Over-extracted — try a coarser grind or shorter time</p>}
                   <p className="text-[9px] text-on-surface-variant/50 mt-3 pt-3 border-t border-outline-variant/10">
-                    Derived from your logged dose & water — not estimated
+                    Estimated from your dose & water ratio (no refractometer needed)
                   </p>
                 </>
               ) : (
@@ -232,45 +269,81 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* Weekly trends */}
+            {/* Weekly Activity */}
             <div>
-              <h3 className="font-headline text-xl text-primary mb-4">Weekly Trends</h3>
-              <div className="flex flex-col gap-4">
-                <div className="bg-surface-container-low p-5 rounded-xl">
-                  <div className="flex justify-between items-center mb-3">
-                    <div>
-                      <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide">Avg Rating</span>
-                      <p className="text-[9px] text-on-surface-variant/60 mt-0.5">vs previous 7 days</p>
-                    </div>
-                    <span className={`text-xs font-bold flex items-center gap-1 ${stats.trendPct >= 0 ? 'text-tertiary' : 'text-error'}`}>
-                      <span className="material-symbols-outlined text-sm">{stats.trendPct >= 0 ? 'trending_up' : 'trending_down'}</span>
-                      {stats.trendPct > 0 ? '+' : ''}{stats.trendPct}%
-                    </span>
-                  </div>
-                  <div className="flex items-end gap-1.5 h-12 mb-1">
-                    {stats.weeklyYields.map((y, i) => {
-                      const isRecent = i >= 5
-                      const pct = Math.max(y, 4)
-                      return <div key={i} className={`flex-1 ${isRecent ? 'bg-primary' : 'bg-surface-container-highest'} rounded-t-sm transition-all duration-500`} style={{ height: pct + '%' }}></div>
-                    })}
-                  </div>
-                  {/* Day labels */}
-                  <div className="flex gap-1.5">
-                    {['M','T','W','T','F','S','S'].map((d, i) => (
-                      <div key={i} className="flex-1 text-center text-[8px] text-on-surface-variant/50 font-bold">{d}</div>
-                    ))}
-                  </div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-headline text-xl text-primary">This Week</h3>
+                {stats.trendPct !== 0 && (
+                  <span className={`text-[10px] font-bold flex items-center gap-0.5 ${stats.trendPct > 0 ? 'text-tertiary' : 'text-error'}`}>
+                    <span className="material-symbols-outlined text-sm">{stats.trendPct > 0 ? 'trending_up' : 'trending_down'}</span>
+                    {stats.trendPct > 0 ? '+' : ''}{stats.trendPct}% vs last week
+                  </span>
+                )}
+              </div>
+
+              {/* 7-day grid */}
+              <div className="bg-surface-container-low rounded-xl p-4">
+                <div className="grid grid-cols-7 gap-1">
+                  {weekActivity.map((day, i) => {
+                    const ratingColor =
+                      day.count === 0 ? ''
+                      : day.avgRating >= 4.5 ? 'text-tertiary'
+                      : day.avgRating >= 3.5 ? 'text-primary'
+                      : 'text-error'
+                    return (
+                      <div
+                        key={i}
+                        className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg transition-colors ${
+                          day.isToday ? 'bg-primary text-white' : day.count > 0 ? 'bg-surface-container' : ''
+                        }`}
+                      >
+                        <span className={`text-[9px] font-bold uppercase ${day.isToday ? 'text-white/70' : 'text-on-surface-variant/60'}`}>
+                          {day.dayLabel}
+                        </span>
+                        <span className={`text-xs font-bold ${day.isToday ? 'text-white' : 'text-primary'}`}>
+                          {day.dateNum}
+                        </span>
+                        {day.count > 0 ? (
+                          <span className={`text-[10px] font-bold leading-none ${day.isToday ? 'text-white' : ratingColor}`}>
+                            {day.avgRating.toFixed(1)}★
+                          </span>
+                        ) : (
+                          <span className={`text-[10px] leading-none ${day.isToday ? 'text-white/40' : 'text-on-surface-variant/25'}`}>—</span>
+                        )}
+                        {day.count > 1 && (
+                          <span className={`text-[8px] font-bold ${day.isToday ? 'text-white/60' : 'text-on-surface-variant/50'}`}>
+                            ×{day.count}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
-                <div className="bg-surface-container-low p-5 rounded-xl">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide">Total Volume</span>
-                    <span className="text-sm font-headline text-primary">{stats.weeklyVolumeLiters}L</span>
+
+                {/* Summary row */}
+                <div className="flex justify-between items-center mt-3 pt-3 border-t border-outline-variant/10">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-on-surface-variant/60">Brews</p>
+                      <p className="text-sm font-bold text-primary">{weekActivity.reduce((s, d) => s + d.count, 0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-on-surface-variant/60">Avg Rating</p>
+                      <p className="text-sm font-bold text-primary">
+                        {(() => {
+                          const days = weekActivity.filter(d => d.count > 0)
+                          return days.length ? (days.reduce((s, d) => s + d.avgRating, 0) / days.length).toFixed(1) + '★' : '—'
+                        })()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] uppercase font-bold text-on-surface-variant/60">Volume</p>
+                      <p className="text-sm font-bold text-primary">{stats.weeklyVolumeLiters}L</p>
+                    </div>
                   </div>
-                  <p className="text-[10px] text-on-surface-variant mb-3">Water used in last 7 days</p>
-                  <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-primary-container h-full rounded-full transition-all duration-700" style={{ width: Math.min(stats.weeklyVolumeLiters / 5 * 100, 100) + '%' }}></div>
-                  </div>
-                  <p className="text-[9px] text-on-surface-variant/50 mt-1 text-right">5L reference</p>
+                  <Link to="/analytics" className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wide hover:text-primary transition-colors flex items-center gap-0.5">
+                    Full log <span className="material-symbols-outlined text-[12px]">arrow_forward</span>
+                  </Link>
                 </div>
               </div>
             </div>

@@ -65,7 +65,7 @@ export default function BrewSetup() {
   const fillWater = Math.min((water / 600) * 100, 100)
   const fillTemp = Math.min(((temp - 60) / 40) * 100, 100)
   const method = METHODS.find(m => m.id === selectedMethod) || METHODS[0]
-  const tds = (dose / water) * 100 * 1.2
+  const estExtraction = (water / dose) * 1.2
   const lastBrew = brews[0] || null
   const brewsLeft = selectedBean?.remainingGrams ? Math.floor(selectedBean.remainingGrams / dose) : 0
   const beanBrews = brews.filter(b => b.beanId === selectedBeanId)
@@ -109,7 +109,7 @@ export default function BrewSetup() {
       ratio: formatRatio(dose, water),
       grindSize: grind,
       brewTime: phasesDuration(selectedMethod),
-      extraction: Number(((dose / water) * 100 * 1.2).toFixed(1)),
+      extraction: Number(((water / dose) * 1.2).toFixed(1)),
     })
     navigate('/guided-brew')
   }
@@ -247,10 +247,20 @@ export default function BrewSetup() {
                 </div>
               </div>
               <div className="relative z-10 space-y-3 mt-auto">
-                <button onClick={startGuidedMode} className="w-full bg-surface-bright text-primary py-4 rounded-md font-bold flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 shadow-xl transition-all text-sm uppercase tracking-widest">
-                  Enter Guided Mode
-                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>play_arrow</span>
-                </button>
+                {selectedBean && selectedBean.remainingGrams <= 0 ? (
+                  <div className="w-full bg-error/20 border border-error/30 py-4 rounded-md flex flex-col items-center gap-1">
+                    <div className="flex items-center gap-2 text-error font-bold text-sm">
+                      <span className="material-symbols-outlined text-[18px]">block</span>
+                      No stock remaining
+                    </div>
+                    <p className="text-[10px] text-white/60">Restock {selectedBean.name} or select a different bean</p>
+                  </div>
+                ) : (
+                  <button onClick={startGuidedMode} className="w-full bg-surface-bright text-primary py-4 rounded-md font-bold flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 shadow-xl transition-all text-sm uppercase tracking-widest">
+                    Enter Guided Mode
+                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>play_arrow</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -260,7 +270,7 @@ export default function BrewSetup() {
         <section className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-8 pt-8 border-t border-outline-variant/15">
           {[
             { icon: 'history', label: 'Last brewed', value: lastBrew ? formatDate(lastBrew.date) : 'Never' },
-            { icon: 'monitoring', label: 'Predicted TDS', value: `${(tds * 0.9).toFixed(2)}% – ${(tds * 1.1).toFixed(2)}%` },
+            { icon: 'monitoring', label: 'Est. Extraction', value: `${(estExtraction * 0.9).toFixed(1)}% – ${(estExtraction * 1.1).toFixed(1)}%` },
             { icon: 'inventory_2', label: 'Bean Stock', value: `~${brewsLeft} brews left (${selectedBean?.remainingGrams || 0}g)` },
             { icon: 'star', label: 'My Rating', value: myBeanAvgRating ? `${myBeanAvgRating} / 5 (${beanBrews.length} brew${beanBrews.length !== 1 ? 's' : ''})` : 'No brews yet', fill: true },
           ].map(s => (
