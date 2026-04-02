@@ -90,21 +90,29 @@ Suggest a grind adjustment for next brew. Return ONLY this JSON:
 }
 
 export async function generateBrewRecipe(bean: Bean, method: string): Promise<BrewRecipe | null> {
-  const text = await callGemini(`You are a specialty coffee expert. Recommend optimal ${method} brew parameters for:
-- Bean: ${bean.name}
-- Origin: ${bean.origin}, Process: ${bean.process || 'unknown'}
-- Roast: ${bean.roastLevel || 'Medium'}
+  const text = await callGemini(`You are a specialty coffee extraction expert. The brewer has selected ${method} as their brewing method. Recommend optimal brew parameters for this specific bean and method combination.
+
+Bean details:
+- Name: ${bean.name}
+- Origin: ${bean.origin}
+- Process: ${bean.process || 'unknown'}
+- Roast level: ${bean.roastLevel || 'Medium'}
 - Tasting notes: ${bean.notes || 'none'}
 
-The brewer has chosen ${method}. Return ONLY this JSON (method field must be exactly "${method}", brewTime in MM:SS format):
+Parameter guidance:
+- Dose: typical range 12–22g depending on method and desired strength
+- Water: determined by the method's ideal ratio (e.g. V60/Chemex ~1:16–1:17, AeroPress ~1:12–1:15, French Press ~1:15–1:17)
+- Temp: lighter roasts extract better at higher temps (92–96°C), darker roasts at lower temps (88–92°C)
+- Brew time: V60 typically 3:00–3:30, Chemex 4:00–4:30, AeroPress 1:30–2:30, French Press 4:00–5:00
+
+Return ONLY this JSON (method must be exactly "${method}", all numeric fields must be calculated from the bean and method above, brewTime in MM:SS format):
 {
   "method": "${method}",
-  "dose": 18.5,
-  "water": 300,
-  "temp": 93,
-  "grindSize": "24 clicks (Comandante)",
-  "brewTime": "3:30",
-  "reasoning": "one sentence explaining why these parameters suit this bean with ${method}"
+  "dose": <grams, number>,
+  "water": <grams, number>,
+  "temp": <celsius, number>,
+  "brewTime": "<MM:SS>",
+  "reasoning": "Two sentences: first explain how this bean's roast level, process, and origin influenced the dose, water, and temperature choices; second explain why this brew time suits ${method} for this bean."
 }`)
   return parseJSON<BrewRecipe>(text)
 }

@@ -17,7 +17,7 @@ export interface BrewRecipe {
   dose: number
   water: number
   temp: number
-  grindSize: string
+  grindSize?: string
   brewTime: string
   reasoning: string
 }
