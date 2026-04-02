@@ -199,17 +199,20 @@ export async function updateBean(id: string, data: Partial<Bean>): Promise<Bean 
   const idx = _beans.findIndex(b => b.id === id)
   if (idx === -1) return undefined
 
-  const merged = normalizeBeanPayload({ ..._beans[idx], ...data })
+  const prev = _beans[idx]
+  const merged = normalizeBeanPayload({ ...prev, ...data })
   validateBean(merged)
-  _beans[idx] = merged
+
   if (_user && isSupabaseConfigured && supabase) {
     const { error } = await dbWriteTimeout(
-      supabase.from('beans').update(beanToDb(_beans[idx], _user.id)).eq('id', id).eq('user_id', _user.id),
+      supabase.from('beans').update(beanToDb(merged, _user.id)).eq('id', id).eq('user_id', _user.id),
       DB_TIMEOUT_MS,
       'Update bean request timed out. Please check your connection and try again.'
     )
     if (error) throw new Error(error.message || 'Failed to update bean')
   }
+
+  _beans[idx] = merged
   saveLocalSnapshot()
   return _beans[idx]
 }

@@ -147,7 +147,16 @@ export default function TasteAnalysis() {
   function applyToNext() {
     if (!brew) { navigate('/brew-setup'); return }
     const updated = { ...brew }
-    if (rating <= 3 && (tags.has('Sour') || tags.has('Bright'))) updated.temp = Math.max(85, (brew.temp ?? 94) - 2)
+    const currentTemp = brew.temp ?? 94
+    if (rating <= 3) {
+      if (tags.has('Sour') || tags.has('Bright') || tags.has('Thin')) {
+        // Under-extracted: raise temperature to increase extraction
+        updated.temp = Math.min(98, currentTemp + 2)
+      } else if (tags.has('Bitter') || tags.has('Astringent')) {
+        // Over-extracted: lower temperature to reduce extraction
+        updated.temp = Math.max(85, currentTemp - 2)
+      }
+    }
     setPendingBrew(updated)
     navigate('/brew-setup')
   }

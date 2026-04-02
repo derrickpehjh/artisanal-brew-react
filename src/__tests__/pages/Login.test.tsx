@@ -29,7 +29,7 @@ function makeContext(overrides: Partial<AppContextValue> = {}): AppContextValue 
     resetAllData: vi.fn(),
     migrateExtractionValues: vi.fn().mockResolvedValue(0),
     signOut: vi.fn(),
-    getActiveBean: vi.fn(() => ({} as ReturnType<AppContextValue['getActiveBean']>)),
+    getActiveBean: vi.fn(() => null),
     setActiveBeanId: vi.fn(),
     getBestBrews: vi.fn(() => []),
     getPendingBrew: vi.fn(() => null),
