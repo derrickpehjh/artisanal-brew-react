@@ -57,7 +57,7 @@ export default function BrewSetup() {
     setGeneratingRecipe(true)
     setRecipeNote(null)
     try {
-      const recipe = await generateBrewRecipe(bean)
+      const recipe = await generateBrewRecipe(bean, selectedMethod)
       if (recipe) {
         if (recipe.method && METHODS.find(m => m.id === recipe.method)) setSelectedMethod(recipe.method)
         if (recipe.dose) setDose(recipe.dose)
