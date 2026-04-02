@@ -13,11 +13,13 @@ const METHOD_BADGE: Record<string, string> = {
   'French Press': 'bg-surface-container text-on-surface-variant',
 }
 
-const IMAGES = [
-  'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&q=80',
-  'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=600&q=80',
-  'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&q=80',
-  'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=600&q=80',
+const CARD_GRADIENTS = [
+  'linear-gradient(135deg, #3e2723 0%, #6d4c41 100%)',
+  'linear-gradient(135deg, #271310 0%, #4e342e 60%, #8d6e63 100%)',
+  'linear-gradient(135deg, #1b5e20 0%, #2e7d32 50%, #4e342e 100%)',
+  'linear-gradient(135deg, #1a237e 0%, #283593 50%, #3e2723 100%)',
+  'linear-gradient(135deg, #bf360c 0%, #6d4c41 100%)',
+  'linear-gradient(135deg, #37474f 0%, #4e342e 100%)',
 ]
 
 interface CommunityRecipe {
@@ -35,9 +37,42 @@ interface CommunityRecipe {
 }
 
 const COMMUNITY: CommunityRecipe[] = [
-  { method: 'V60', beanName: 'Ethiopia Yirgacheffe', dose: 18, water: 300, temp: 93, ratio: '1:16.7', grindSize: '24 clicks', brewTime: phasesDuration('V60'), rating: 5, tasteTags: ['Floral', 'Juicy', 'Bright'], notes: 'A clean, crisp extraction highlighting jasmine and citrus.' },
-  { method: 'Chemex', beanName: 'Kenya Nyeri', dose: 25, water: 400, temp: 95, ratio: '1:16', grindSize: 'Medium-Coarse', brewTime: phasesDuration('Chemex'), rating: 5, tasteTags: ['Berry', 'Bright', 'Complex'], notes: 'Outstanding clarity. Let the thick filter do its work.' },
-  { method: 'AeroPress', beanName: 'Colombia Huila', dose: 18, water: 250, temp: 93, ratio: '1:13.9', grindSize: 'Medium', brewTime: phasesDuration('AeroPress'), rating: 4, tasteTags: ['Balanced', 'Caramel', 'Smooth'], notes: 'Fast, concentrated extraction with honey sweetness.' },
+  {
+    method: 'V60', beanName: 'Ethiopia Yirgacheffe', dose: 18, water: 300, temp: 93,
+    ratio: '1:16.7', grindSize: '24 clicks (Comandante)', brewTime: phasesDuration('V60'), rating: 5,
+    tasteTags: ['Floral', 'Juicy', 'Bright'],
+    notes: 'Classic Tetsu Kasuya 4:6 inspired. Bloom 50g, then four 62g pours. Highlights jasmine and citrus.',
+  },
+  {
+    method: 'Chemex', beanName: 'Kenya Nyeri AB', dose: 25, water: 400, temp: 96,
+    ratio: '1:16', grindSize: 'Medium-Coarse', brewTime: phasesDuration('Chemex'), rating: 5,
+    tasteTags: ['Berry', 'Bright', 'Complex'],
+    notes: 'The Chemex thick filter strips oils beautifully. Slow 45-second bloom. Don\'t rush the drawdown.',
+  },
+  {
+    method: 'AeroPress', beanName: 'Colombia Huila', dose: 18, water: 250, temp: 90,
+    ratio: '1:13.9', grindSize: 'Medium-Fine', brewTime: phasesDuration('AeroPress'), rating: 4,
+    tasteTags: ['Balanced', 'Caramel', 'Smooth'],
+    notes: 'Inverted method, 2-minute steep. Press slow over 30 seconds. Honey sweetness and clean finish.',
+  },
+  {
+    method: 'V60', beanName: 'Guatemala Antigua', dose: 20, water: 320, temp: 94,
+    ratio: '1:16', grindSize: '22 clicks (Comandante)', brewTime: phasesDuration('V60'), rating: 4,
+    tasteTags: ['Chocolate', 'Nutty', 'Syrupy'],
+    notes: 'Medium-dark roast that rewards a slightly coarser grind. Rich body with cocoa and brown sugar.',
+  },
+  {
+    method: 'French Press', beanName: 'Sumatra Mandheling', dose: 30, water: 500, temp: 95,
+    ratio: '1:16.7', grindSize: 'Coarse', brewTime: phasesDuration('French Press'), rating: 4,
+    tasteTags: ['Earthy', 'Syrupy', 'Bold'],
+    notes: '4-minute steep, gentle plunge. Let the fines settle 1 minute before pouring. Full-bodied and complex.',
+  },
+  {
+    method: 'AeroPress', beanName: 'Panama Gesha', dose: 15, water: 200, temp: 88,
+    ratio: '1:13.3', grindSize: 'Medium', brewTime: phasesDuration('AeroPress'), rating: 5,
+    tasteTags: ['Floral', 'Citrus', 'Complex'],
+    notes: 'Treat high-quality Gesha gently with lower temp. 90-second steep. Delicate, tea-like clarity.',
+  },
 ]
 
 type Recipe = (Brew | CommunityRecipe) & { id?: string; beanId?: string }
@@ -53,9 +88,11 @@ function RecipeCard({ recipe, idx, canReplicate, onUse }: RecipeCardProps) {
   const extraction = (recipe as Brew).extraction
   return (
     <div className="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(62,39,35,0.04)] hover:shadow-xl transition-all flex flex-col">
-      <div className="h-44 overflow-hidden relative">
-        <img src={IMAGES[idx % IMAGES.length]} alt={recipe.beanName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
-        <div className="absolute inset-0 bg-gradient-to-t from-primary/50 to-transparent"></div>
+      <div className="h-44 overflow-hidden relative" style={{ background: CARD_GRADIENTS[idx % CARD_GRADIENTS.length] }}>
+        <div className="absolute inset-0 flex items-center justify-center opacity-10">
+          <span className="material-symbols-outlined text-white" style={{ fontSize: '80px', fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 48" }}>coffee</span>
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
         <div className="absolute top-3 left-3">
           <span className={`text-[9px] font-bold px-2.5 py-1 rounded uppercase tracking-wide ${METHOD_BADGE[recipe.method] || 'bg-white/90 text-primary'}`}>{recipe.method}</span>
         </div>
