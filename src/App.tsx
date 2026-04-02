@@ -1,3 +1,4 @@
+import { Component, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useApp } from './context/AppContext'
 import Login from './pages/Login'
@@ -9,6 +10,29 @@ import TasteAnalysis from './pages/TasteAnalysis'
 import Analytics from './pages/Analytics'
 import Recipes from './pages/Recipes'
 import Settings from './pages/Settings'
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null }
+  static getDerivedStateFromError(error: Error) { return { error } }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="flex flex-col items-center justify-center h-screen bg-background gap-4 p-8 text-center">
+          <span className="material-symbols-outlined text-error" style={{ fontSize: '48px' }}>error</span>
+          <h1 className="font-headline text-2xl text-primary font-bold">Something went wrong</h1>
+          <p className="text-sm text-on-surface-variant max-w-md">{(this.state.error as Error).message}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="brew-gradient text-white px-6 py-3 rounded-full font-bold text-sm hover:opacity-90 transition-all mt-2"
+          >
+            Reload App
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useApp()
@@ -31,6 +55,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -45,5 +70,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </ErrorBoundary>
   )
 }

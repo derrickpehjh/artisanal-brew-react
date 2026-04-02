@@ -131,8 +131,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setActiveBeanIdState(id)
   }, [])
 
-  const getActiveBean = useCallback((): Bean => {
-    return beans.find(b => b.id === activeBeanId) || beans[0] || ({} as Bean)
+  const getActiveBean = useCallback((): Bean | null => {
+    return beans.find(b => b.id === activeBeanId) || beans[0] || null
   }, [beans, activeBeanId])
 
   const getBestBrews = useCallback((n = 2): Brew[] => {

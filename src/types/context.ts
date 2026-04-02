@@ -19,7 +19,7 @@ export interface AppContextValue {
   resetAllData: () => Promise<void>
   migrateExtractionValues: () => Promise<number>
   signOut: () => Promise<void>
-  getActiveBean: () => Bean
+  getActiveBean: () => Bean | null
   setActiveBeanId: (id: string) => void
   getBestBrews: (n?: number) => Brew[]
   getPendingBrew: () => Partial<Brew> | null
