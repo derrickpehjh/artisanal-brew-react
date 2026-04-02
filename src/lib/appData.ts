@@ -191,6 +191,7 @@ export async function addBean(bean: Partial<Bean>): Promise<Bean> {
     if (error) throw new Error(error.message || 'Failed to save bean')
   }
   _beans.push(normalized)
+  saveLocalSnapshot()
   return normalized
 }
 
@@ -209,6 +210,7 @@ export async function updateBean(id: string, data: Partial<Bean>): Promise<Bean 
     )
     if (error) throw new Error(error.message || 'Failed to update bean')
   }
+  saveLocalSnapshot()
   return _beans[idx]
 }
 
@@ -248,6 +250,7 @@ export async function deleteBean(id: string): Promise<Bean | undefined> {
     }
   }
 
+  saveLocalSnapshot()
   return removedBean
 }
 
