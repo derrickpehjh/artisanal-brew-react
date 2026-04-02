@@ -105,13 +105,13 @@ Parameter guidance:
 - Temp: lighter roasts extract better at higher temps (92–96°C), darker roasts at lower temps (88–92°C)
 - Brew time: V60 typically 3:00–3:30, Chemex 4:00–4:30, AeroPress 1:30–2:30, French Press 4:00–5:00
 
-Return ONLY this JSON (method must be exactly "${method}", brewTime in MM:SS format):
+Return ONLY this JSON (method must be exactly "${method}", all numeric fields must be calculated from the bean and method above, brewTime in MM:SS format):
 {
   "method": "${method}",
-  "dose": 18.5,
-  "water": 300,
-  "temp": 93,
-  "brewTime": "3:30",
+  "dose": <grams, number>,
+  "water": <grams, number>,
+  "temp": <celsius, number>,
+  "brewTime": "<MM:SS>",
   "reasoning": "Two sentences: first explain how this bean's roast level, process, and origin influenced the dose, water, and temperature choices; second explain why this brew time suits ${method} for this bean."
 }`)
   return parseJSON<BrewRecipe>(text)
