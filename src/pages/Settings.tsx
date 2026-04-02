@@ -3,9 +3,23 @@ import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
 import ConfirmModal from '../components/ui/ConfirmModal'
 import { type BrewPrefs, BREW_PREFS_KEY, loadBrewPrefs } from '../lib/brewUtils'
+import type { Bean } from '../types/bean'
+import type { Brew } from '../types/brew'
+
+const CUSTOM_TAGS_KEY = 'artisanal_custom_tags'
+
+function loadCustomTags(): string[] {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_TAGS_KEY) || '[]') as string[] } catch { return [] }
+}
+
+function applyTheme(t: 'light' | 'dark' | 'system') {
+  localStorage.setItem('artisanal_theme', t)
+  const isDark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  document.documentElement.classList.toggle('dark', isDark)
+}
 
 export default function Settings() {
-  const { user, beans, brews, stats, signOut, resetAllData, migrateExtractionValues, supabase } = useApp()
+  const { user, beans, brews, stats, addBean, saveBrew, signOut, resetAllData, migrateExtractionValues, supabase } = useApp()
   const [signingOut, setSigningOut] = useState(false)
   const [resetting, setResetting] = useState(false)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
@@ -14,6 +28,12 @@ export default function Settings() {
   const [migrateResult, setMigrateResult] = useState<string | null>(null)
   const [prefs, setPrefs] = useState<BrewPrefs>(loadBrewPrefs)
   const [prefsSaved, setPrefsSaved] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() =>
+    (localStorage.getItem('artisanal_theme') as 'light' | 'dark' | 'system') || 'system'
+  )
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState<string | null>(null)
+  const [customTags, setCustomTags] = useState<string[]>(loadCustomTags)
 
   async function savePrefs() {
     localStorage.setItem(BREW_PREFS_KEY, JSON.stringify(prefs))
@@ -70,6 +90,49 @@ export default function Settings() {
     } finally {
       setSigningOut(false)
     }
+  }
+
+  function handleThemeChange(t: 'light' | 'dark' | 'system') {
+    applyTheme(t)
+    setTheme(t)
+  }
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setImporting(true)
+    setImportResult(null)
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text) as { beans?: Bean[]; brews?: Brew[] }
+      const beanList = Array.isArray(data.beans) ? data.beans : []
+      const brewList = Array.isArray(data.brews) ? data.brews : []
+      let beanCount = 0, brewCount = 0
+      for (const b of beanList) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id: _id, ...rest } = b
+        await addBean(rest)
+        beanCount++
+      }
+      for (const br of brewList) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id: _id, ...rest } = br
+        await saveBrew(rest)
+        brewCount++
+      }
+      setImportResult(`Imported ${beanCount} bean${beanCount !== 1 ? 's' : ''} and ${brewCount} brew${brewCount !== 1 ? 's' : ''}.`)
+    } catch {
+      setImportResult('Import failed — invalid file format.')
+    } finally {
+      setImporting(false)
+    }
+  }
+
+  function removeCustomTag(tag: string) {
+    const updated = customTags.filter(t => t !== tag)
+    localStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(updated))
+    setCustomTags(updated)
   }
 
   const prefFields: { label: string; key: keyof BrewPrefs; type: string; unit: string; min: number; max: number; step: number }[] = [
@@ -176,6 +239,42 @@ export default function Settings() {
           </button>
         </section>
 
+        {/* Appearance */}
+        <section className="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_4px_20px_rgba(62,39,35,0.04)]">
+          <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-6">Appearance</h3>
+          <p className="text-xs text-on-surface-variant mb-4">Choose light, dark, or follow your system preference.</p>
+          <div className="flex gap-2">
+            {([['light', 'light_mode', 'Light'], ['dark', 'dark_mode', 'Dark'], ['system', 'brightness_auto', 'System']] as [string, string, string][]).map(([val, icon, label]) => (
+              <button
+                key={val}
+                onClick={() => handleThemeChange(val as 'light' | 'dark' | 'system')}
+                className={`flex-1 flex flex-col items-center gap-2 py-4 rounded-xl text-xs font-bold transition-all border ${theme === val ? 'bg-primary text-on-primary border-transparent' : 'bg-surface-container-low text-on-surface-variant border-outline-variant/20 hover:bg-surface-container-high'}`}
+              >
+                <span className="material-symbols-outlined text-[20px]">{icon}</span>
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Custom Taste Tags */}
+        {customTags.length > 0 && (
+          <section className="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_4px_20px_rgba(62,39,35,0.04)]">
+            <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Custom Taste Tags</h3>
+            <p className="text-xs text-on-surface-variant mb-5">Tags you added during taste analysis. Remove any you no longer need.</p>
+            <div className="flex flex-wrap gap-2">
+              {customTags.map(tag => (
+                <span key={tag} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface-container rounded-full text-xs font-bold text-primary">
+                  {tag}
+                  <button onClick={() => removeCustomTag(tag)} className="text-on-surface-variant hover:text-error transition-colors" aria-label={`Remove ${tag}`}>
+                    <span className="material-symbols-outlined text-[14px]">close</span>
+                  </button>
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Data Management */}
         <section className="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_4px_20px_rgba(62,39,35,0.04)]">
           <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-6">Data Management</h3>
@@ -189,6 +288,22 @@ export default function Settings() {
                 </div>
               </div>
               <button onClick={exportData} className="px-4 py-2 bg-surface-container-high text-on-surface rounded-lg text-xs font-bold hover:bg-surface-container-highest transition-colors">Export</button>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary">upload</span>
+                <div>
+                  <p className="text-sm font-bold text-primary">Import Brew Data</p>
+                  <p className="text-xs text-on-surface-variant">{importResult ?? 'Restore from a previously exported JSON file'}</p>
+                </div>
+              </div>
+              <label className={`px-4 py-2 bg-surface-container-high text-on-surface rounded-lg text-xs font-bold hover:bg-surface-container-highest transition-colors cursor-pointer shrink-0 ${importing ? 'opacity-60 pointer-events-none' : ''}`}>
+                {importing
+                  ? <span className="inline-flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>Importing…</span>
+                  : 'Import'
+                }
+                <input type="file" accept=".json" className="sr-only" onChange={handleImport} disabled={importing} />
+              </label>
             </div>
             <div className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
               <div className="flex items-center gap-3">
