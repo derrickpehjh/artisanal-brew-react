@@ -1,6 +1,22 @@
 import { PHASES } from './appData'
 import type { BrewPhase } from '../types/brew'
 
+// parseBrewTime — "3:30" → 210 (seconds)
+export function parseBrewTime(mmss: string): number {
+  const parts = String(mmss || '').split(':')
+  const m = parseInt(parts[0] || '0', 10)
+  const s = parseInt(parts[1] || '0', 10)
+  return (isNaN(m) ? 0 : m) * 60 + (isNaN(s) ? 0 : s)
+}
+
+// scalePhasesToDuration — proportionally adjusts phase durations to sum to targetSecs
+export function scalePhasesToDuration(phases: BrewPhase[], targetSecs: number): BrewPhase[] {
+  const defaultTotal = phases.reduce((s, p) => s + p.duration, 0)
+  if (!defaultTotal || defaultTotal === targetSecs) return phases
+  const scale = targetSecs / defaultTotal
+  return phases.map(p => ({ ...p, duration: Math.max(1, Math.round(p.duration * scale)) }))
+}
+
 // BrewPrefs — shared between BrewSetup and Settings
 export interface BrewPrefs {
   dose: number
