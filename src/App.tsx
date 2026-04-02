@@ -10,6 +10,7 @@ import TasteAnalysis from './pages/TasteAnalysis'
 import Analytics from './pages/Analytics'
 import Recipes from './pages/Recipes'
 import Settings from './pages/Settings'
+import NotFound from './pages/NotFound'
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -67,7 +68,7 @@ export default function App() {
         <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
         <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
     </ErrorBoundary>
