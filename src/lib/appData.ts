@@ -106,12 +106,17 @@ function loadLocalSnapshot(): boolean {
   } catch { return false }
 }
 
+function relativeRoastDate(daysAgo: number): string {
+  const d = new Date(Date.now() - daysAgo * 86400000)
+  return `${d.toLocaleString('default', { month: 'short' })} ${d.getDate()}, ${d.getFullYear()}`
+}
+
 function seedBeans(userId: string): BeanDbRow[] {
   return [
-    { id: crypto.randomUUID(), user_id: userId, name: 'Ethiopia Yirgacheffe', origin: 'Ethiopia', process: 'Washed Process', roast_level: 'Light-Medium', roast_date: 'Oct 12, 2023', total_grams: 250, remaining_grams: 162, notes: 'Floral jasmine notes with a bright citrus finish.', community_rating: 4.8, community_reviews: 1200 },
-    { id: crypto.randomUUID(), user_id: userId, name: 'Colombia Huila', origin: 'Colombia', process: 'Honey Process', roast_level: 'Medium', roast_date: 'Oct 05, 2023', total_grams: 200, remaining_grams: 45, notes: 'Caramel sweetness, smooth and balanced finish.', community_rating: 4.5, community_reviews: 890 },
-    { id: crypto.randomUUID(), user_id: userId, name: 'Kenya Nyeri', origin: 'Kenya', process: 'Natural Process', roast_level: 'Light', roast_date: 'Oct 01, 2023', total_grams: 250, remaining_grams: 210, notes: 'Bright berry acidity with a wine-like finish.', community_rating: 4.7, community_reviews: 650 },
-    { id: crypto.randomUUID(), user_id: userId, name: 'Guatemala Huehuetenango', origin: 'Guatemala', process: 'Washed Process', roast_level: 'Medium', roast_date: 'Sep 20, 2023', total_grams: 500, remaining_grams: 380, notes: 'Dark chocolate and brown sugar, clean finish.', community_rating: 4.6, community_reviews: 420 },
+    { id: crypto.randomUUID(), user_id: userId, name: 'Ethiopia Yirgacheffe', origin: 'Ethiopia', process: 'Washed Process', roast_level: 'Light-Medium', roast_date: relativeRoastDate(10), total_grams: 250, remaining_grams: 162, notes: 'Floral jasmine notes with a bright citrus finish.', community_rating: 4.8, community_reviews: 1200 },
+    { id: crypto.randomUUID(), user_id: userId, name: 'Colombia Huila', origin: 'Colombia', process: 'Honey Process', roast_level: 'Medium', roast_date: relativeRoastDate(17), total_grams: 200, remaining_grams: 45, notes: 'Caramel sweetness, smooth and balanced finish.', community_rating: 4.5, community_reviews: 890 },
+    { id: crypto.randomUUID(), user_id: userId, name: 'Kenya Nyeri', origin: 'Kenya', process: 'Natural Process', roast_level: 'Light', roast_date: relativeRoastDate(21), total_grams: 250, remaining_grams: 210, notes: 'Bright berry acidity with a wine-like finish.', community_rating: 4.7, community_reviews: 650 },
+    { id: crypto.randomUUID(), user_id: userId, name: 'Guatemala Huehuetenango', origin: 'Guatemala', process: 'Washed Process', roast_level: 'Medium', roast_date: relativeRoastDate(32), total_grams: 500, remaining_grams: 380, notes: 'Dark chocolate and brown sugar, clean finish.', community_rating: 4.6, community_reviews: 420 },
   ]
 }
 
@@ -167,6 +172,12 @@ export async function loadData(user: User): Promise<{ beans: Bean[]; brews: Brew
 }
 
 export function setUser(user: User | null): void { _user = user }
+export function clearLocalSnapshot(): void {
+  try {
+    localStorage.removeItem(cacheKey('beans'))
+    localStorage.removeItem(cacheKey('brews'))
+  } catch { /* ignore */ }
+}
 export function getBeans(): Bean[] { return _beans }
 export function getBrews(): Brew[] { return [..._brews].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) }
 

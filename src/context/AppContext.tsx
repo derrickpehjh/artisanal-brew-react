@@ -5,7 +5,7 @@ import {
   addBean as _addBean, updateBean as _updateBean, deleteBean as _deleteBean,
   saveBrew as _saveBrew, resetAllData as _resetAllData, migrateExtractionValues as _migrateExtractionValues,
   getPendingBrew, setPendingBrew, clearPendingBrew,
-  getActiveBeanId,
+  getActiveBeanId, clearLocalSnapshot,
   formatDate, formatRatio, formatTime, buildChartPath, getTip, getPhases,
 } from '../lib/appData'
 import type { User } from '@supabase/supabase-js'
@@ -121,9 +121,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signOut = useCallback(async () => {
+    clearLocalSnapshot()
     if (supabase) await supabase.auth.signOut()
     localStorage.removeItem('artisanal_pending_brew')
     localStorage.removeItem('artisanal_active_bean')
+    localStorage.removeItem('artisanal_custom_tags')
   }, [])
 
   const setActiveBeanId = useCallback((id: string) => {

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
+import ConfirmModal from '../components/ui/ConfirmModal'
 
 const PREFS_KEY = 'artisanal_brew_prefs'
 
@@ -22,6 +23,8 @@ export default function Settings() {
   const { user, beans, brews, stats, signOut, resetAllData, migrateExtractionValues, supabase } = useApp()
   const [signingOut, setSigningOut] = useState(false)
   const [resetting, setResetting] = useState(false)
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [resetDone, setResetDone] = useState(false)
   const [migrating, setMigrating] = useState(false)
   const [migrateResult, setMigrateResult] = useState<string | null>(null)
   const [prefs, setPrefs] = useState<BrewPrefs>(loadPrefs)
@@ -64,14 +67,12 @@ export default function Settings() {
   }
 
   async function handleReset() {
-    if (confirm('This will permanently delete all your brews and beans. This cannot be undone. Continue?')) {
-      setResetting(true)
-      try {
-        await resetAllData()
-        alert('All data has been reset.')
-      } finally {
-        setResetting(false)
-      }
+    setResetting(true)
+    try {
+      await resetAllData()
+      setResetDone(true)
+    } finally {
+      setResetting(false)
     }
   }
 
@@ -230,7 +231,7 @@ export default function Settings() {
                   <p className="text-xs text-on-surface-variant">Permanently delete all brews and beans</p>
                 </div>
               </div>
-              <button onClick={handleReset} disabled={resetting} className="px-4 py-2 bg-error text-white rounded-lg text-xs font-bold hover:opacity-90 transition-colors disabled:opacity-60">
+              <button onClick={() => setShowResetConfirm(true)} disabled={resetting} className="px-4 py-2 bg-error text-white rounded-lg text-xs font-bold hover:opacity-90 transition-colors disabled:opacity-60">
                 {resetting ? (
                   <span className="inline-flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>Resetting…</span>
                 ) : 'Reset'}
@@ -254,5 +255,23 @@ export default function Settings() {
         </section>
       </div>
     </Layout>
+
+    {showResetConfirm && (
+      <ConfirmModal
+        title="Reset All Data"
+        message="This will permanently delete all your brews and beans. This cannot be undone."
+        confirmLabel={resetting ? 'Resetting…' : 'Reset Everything'}
+        danger
+        onConfirm={() => { setShowResetConfirm(false); handleReset() }}
+        onCancel={() => setShowResetConfirm(false)}
+      />
+    )}
+    {resetDone && (
+      <ConfirmModal
+        message="All data has been reset."
+        confirmLabel="OK"
+        onConfirm={() => setResetDone(false)}
+      />
+    )}
   )
 }

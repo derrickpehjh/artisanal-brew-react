@@ -1,7 +1,8 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
+import ConfirmModal from '../components/ui/ConfirmModal'
 import BeanCard from '../components/beans/BeanCard'
 import BeanDetailModal from '../components/beans/BeanDetailModal'
 import BeanFormModal, { toIsoDateString } from '../components/beans/BeanFormModal'
@@ -68,6 +69,9 @@ export default function Beans() {
   const [scanError, setScanError] = useState<string | null>(null)
   const [aiFilledFields, setAiFilledFields] = useState<Set<string>>(new Set())
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const confirmingDeleteRef = useRef(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   function fetchFreshnessTips(bean: Bean, f: FreshnessResult) {
     setLoadingTips(true)
@@ -216,9 +220,9 @@ export default function Beans() {
     if (!detailBean || deleting) return
     const deletingActiveBean = detailBean.id === activeBean?.id
     const nextBean = beans.find(b => b.id !== detailBean.id)
-    if (!confirm(`Delete bean "${detailBean.name}"? This cannot be undone.`)) return
 
     setDeleting(true)
+    setDeleteError(null)
     try {
       await deleteBean(detailBean.id)
       if (deletingActiveBean) {
@@ -227,9 +231,10 @@ export default function Beans() {
       }
       setDetailBeanId(null)
     } catch (err) {
-      alert((err as Error)?.message || 'Failed to delete bean. Please try again.')
+      setDeleteError((err as Error)?.message || 'Failed to delete bean. Please try again.')
     } finally {
       setDeleting(false)
+      confirmingDeleteRef.current = false
     }
   }
 
@@ -314,8 +319,26 @@ export default function Beans() {
           onSetActive={() => { setActiveBeanId(detailBean.id); setDetailBeanId(null) }}
           onBrew={() => { setActiveBeanId(detailBean.id); navigate('/brew-setup') }}
           onEdit={openEdit}
-          onDelete={handleDeleteBean}
+          onDelete={() => setShowDeleteConfirm(true)}
           onRetryTips={() => detailBean && freshness && fetchFreshnessTips(detailBean, freshness)}
+        />
+      )}
+
+      {/* Delete Confirm */}
+      {showDeleteConfirm && detailBean && (
+        <ConfirmModal
+          message={`Delete "${detailBean.name}"? This cannot be undone.`}
+          confirmLabel={deleting ? 'Deleting…' : 'Delete'}
+          danger
+          onConfirm={() => { setShowDeleteConfirm(false); handleDeleteBean() }}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
+      {deleteError && (
+        <ConfirmModal
+          message={deleteError}
+          confirmLabel="OK"
+          onConfirm={() => setDeleteError(null)}
         />
       )}
 

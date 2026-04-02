@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import ConfirmModal from '../components/ui/ConfirmModal'
 import type { BrewPhase } from '../types/brew'
 
 export default function GuidedBrew() {
@@ -15,6 +16,8 @@ export default function GuidedBrew() {
   const [phaseSecs, setPhaseSecs] = useState(0)
   const [running, setRunning] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
+  const [showParamsModal, setShowParamsModal] = useState(false)
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const totalSecsRef = useRef(0)
@@ -85,23 +88,16 @@ export default function GuidedBrew() {
   }
 
   function exitBrew() {
-    if (confirm('Exit the guided brew? Your timer progress will be lost.')) {
-      clearInterval(intervalRef.current!)
-      navigate('/brew-setup')
-    }
+    setShowExitConfirm(true)
   }
 
   function showBrewSettings() {
-    if (!brew) return
-    const details = [
-      `Bean: ${brew.beanName}`,
-      `Method: ${brew.method}`,
-      `Dose: ${brew.dose}g`,
-      `Water: ${brew.water}g`,
-      `Temp: ${brew.temp}°C`,
-      `Grind: ${brew.grindSize}`,
-    ].join('\n')
-    alert('Current Brew Parameters:\n\n' + details)
+    setShowParamsModal(true)
+  }
+
+  async function handleSignOut() {
+    await signOut()
+    navigate('/login')
   }
 
   if (!brew || !phases.length) return null
@@ -165,9 +161,9 @@ export default function GuidedBrew() {
                 <div key={i} className={`w-2 h-2 rounded-full transition-all duration-300 ${i === currentPhase ? 'bg-primary scale-125' : i < currentPhase ? 'bg-primary/40' : 'bg-outline-variant/40'}`}></div>
               ))}
             </div>
-            <button onClick={() => alert('No new notifications.')} className="text-on-surface-variant hover:text-primary transition-colors">
+            <span className="text-on-surface-variant/40" aria-label="No new notifications">
               <span className="material-symbols-outlined">notifications</span>
-            </button>
+            </span>
             <div className="relative">
               <button onClick={() => setMenuOpen(v => !v)} className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center border border-outline-variant/15 overflow-hidden hover:ring-2 hover:ring-primary/20 transition-all">
                 {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-on-surface-variant" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>account_circle</span>}
@@ -181,7 +177,7 @@ export default function GuidedBrew() {
                   <Link to="/settings" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors">
                     <span className="material-symbols-outlined text-[18px]">manage_accounts</span>Profile &amp; Settings
                   </Link>
-                  <button onClick={signOut} className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-error hover:bg-error-container/30 transition-colors">
+                  <button onClick={handleSignOut} className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-error hover:bg-error-container/30 transition-colors">
                     <span className="material-symbols-outlined text-[18px]">logout</span>Sign Out
                   </button>
                 </div>
@@ -339,5 +335,31 @@ export default function GuidedBrew() {
         </footer>
       </main>
     </div>
+
+    {showExitConfirm && (
+      <ConfirmModal
+        message="Exit the guided brew? Your timer progress will be lost."
+        confirmLabel="Exit"
+        danger
+        onConfirm={() => { clearInterval(intervalRef.current!); navigate('/brew-setup') }}
+        onCancel={() => setShowExitConfirm(false)}
+      />
+    )}
+
+    {showParamsModal && brew && (
+      <ConfirmModal
+        title="Brew Parameters"
+        message={[
+          `Bean: ${brew.beanName}`,
+          `Method: ${brew.method}`,
+          `Dose: ${brew.dose}g`,
+          `Water: ${brew.water}g`,
+          `Temp: ${brew.temp}°C`,
+          `Grind: ${brew.grindSize}`,
+        ].join(' · ')}
+        confirmLabel="Close"
+        onConfirm={() => setShowParamsModal(false)}
+      />
+    )}
   )
 }
