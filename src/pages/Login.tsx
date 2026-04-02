@@ -9,6 +9,7 @@ export default function Login() {
   const navigate = useNavigate()
   const [lastGoogleEmail, setLastGoogleEmail] = useState(() => localStorage.getItem(LAST_GOOGLE_EMAIL_KEY) || '')
   const [authLoading, setAuthLoading] = useState('')
+  const [authError, setAuthError] = useState<string | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -26,10 +27,11 @@ export default function Login() {
 
   async function signInWithGoogle(forceAccountPicker = false) {
     if (!supabase) {
-      alert('Supabase is not configured on this deployment. Add VITE_SUPABASE_URL and VITE_SUPABASE_KEY in Vercel Project Settings > Environment Variables.')
+      setAuthError('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_KEY in Vercel Project Settings > Environment Variables.')
       return
     }
 
+    setAuthError(null)
     setAuthLoading(forceAccountPicker ? 'google-another' : 'google')
 
     const redirectTo = buildRedirectUrl()
@@ -48,7 +50,7 @@ export default function Login() {
         options: { redirectTo, queryParams },
       })
       if (error) {
-        alert('Sign-in failed: ' + error.message + `\nRedirect URL: ${redirectTo}\n\nMake sure this URL is added as an authorized redirect URI in Supabase Dashboard.`)
+        setAuthError(`Sign-in failed: ${error.message}. Make sure ${redirectTo} is an authorized redirect URI in Supabase Dashboard.`)
       }
     } finally {
       setAuthLoading('')
@@ -57,7 +59,7 @@ export default function Login() {
 
   async function signInWithAnotherGoogleAccount() {
     if (!supabase) {
-      alert('Supabase is not configured on this deployment.')
+      setAuthError('Supabase is not configured.')
       return
     }
     await supabase.auth.signOut({ scope: 'local' })
@@ -66,13 +68,14 @@ export default function Login() {
 
   async function continueAsDemo() {
     if (!supabase) {
-      alert('Supabase is not configured on this deployment.')
+      setAuthError('Supabase is not configured.')
       return
     }
+    setAuthError(null)
     setAuthLoading('demo')
     try {
       const { error } = await supabase.auth.signInAnonymously()
-      if (error) { alert('Demo mode unavailable: ' + error.message); return }
+      if (error) { setAuthError('Demo mode unavailable: ' + error.message); return }
       navigate('/', { replace: true })
     } finally {
       setAuthLoading('')
@@ -121,6 +124,11 @@ export default function Login() {
             {!isSupabaseConfigured && (
               <div className="rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-xs text-amber-900">
                 Authentication is not configured for this deployment. Add VITE_SUPABASE_URL and VITE_SUPABASE_KEY in Vercel environment variables.
+              </div>
+            )}
+            {authError && (
+              <div className="rounded-xl border border-error/30 bg-error-container/20 px-4 py-3 text-xs text-error leading-relaxed">
+                {authError}
               </div>
             )}
             <button onClick={() => signInWithGoogle(false)} disabled={Boolean(authLoading)} className="w-full flex items-center justify-center gap-3 bg-surface-container-lowest border border-outline-variant rounded-xl px-6 py-4 font-bold text-on-background hover:bg-surface-container-high transition-colors shadow-sm text-sm group disabled:opacity-60">

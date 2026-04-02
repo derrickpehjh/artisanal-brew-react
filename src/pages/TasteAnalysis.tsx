@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
 import { suggestGrindAdjustment, getBrewAnalysis } from '../lib/aiBrewAssist'
+import ConfirmModal from '../components/ui/ConfirmModal'
 import RatingPanel from '../components/taste/RatingPanel'
 import TasteTagPanel from '../components/taste/TasteTagPanel'
 import AISommelierCard from '../components/taste/AISommelierCard'
@@ -46,8 +47,12 @@ export default function TasteAnalysis() {
   const [loadingSuggestion, setLoadingSuggestion] = useState(false)
   const [brewAnalysis, setBrewAnalysis] = useState<BrewAnalysis | null>(null)
   const [loadingAnalysis, setLoadingAnalysis] = useState(true)
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
+  const [copiedToast, setCopiedToast] = useState(false)
+  const analysisVersion = useRef(0)
 
   const runBrewAnalysis = useCallback((currentRating: number, currentTags: Set<string>) => {
+    const version = ++analysisVersion.current
     setLoadingAnalysis(true)
     getBrewAnalysis({
       method: brew?.method || 'V60',
@@ -64,9 +69,9 @@ export default function TasteAnalysis() {
       beanProcess: bean?.process,
       beanRoastLevel: bean?.roastLevel,
     })
-      .then(result => setBrewAnalysis(result))
+      .then(result => { if (analysisVersion.current === version) setBrewAnalysis(result) })
       .catch(() => {})
-      .finally(() => setLoadingAnalysis(false))
+      .finally(() => { if (analysisVersion.current === version) setLoadingAnalysis(false) })
   }, [brew, bean])
 
   useEffect(() => {
@@ -94,7 +99,6 @@ export default function TasteAnalysis() {
   }
 
   async function handleSave() {
-    if (!brew && !confirm('No active brew session. Save a demo entry?')) return
     setSaving(true)
     setSaveError(null)
     const entry = {
@@ -138,10 +142,7 @@ export default function TasteAnalysis() {
   }
 
   function discard() {
-    if (confirm('Discard this brew session? It will not be saved.')) {
-      clearPendingBrew()
-      navigate('/')
-    }
+    setShowDiscardConfirm(true)
   }
 
   function applyToNext() {
@@ -168,7 +169,7 @@ export default function TasteAnalysis() {
     if (navigator.share) {
       navigator.share({ title: 'My Brew Log', text }).catch(() => {})
     } else {
-      navigator.clipboard.writeText(text).then(() => alert('Brew log copied to clipboard!')).catch(() => alert(text))
+      navigator.clipboard.writeText(text).then(() => { setCopiedToast(true); setTimeout(() => setCopiedToast(false), 2500) }).catch(() => {})
     }
   }
 
@@ -305,5 +306,21 @@ export default function TasteAnalysis() {
         </section>
       </div>
     </Layout>
+
+    {showDiscardConfirm && (
+      <ConfirmModal
+        message="Discard this brew session? It will not be saved."
+        confirmLabel="Discard"
+        danger
+        onConfirm={() => { clearPendingBrew(); navigate('/') }}
+        onCancel={() => setShowDiscardConfirm(false)}
+      />
+    )}
+
+    {copiedToast && (
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] bg-primary text-white text-xs font-bold px-5 py-3 rounded-full shadow-xl animate-fade-in">
+        Brew log copied to clipboard
+      </div>
+    )}
   )
 }
