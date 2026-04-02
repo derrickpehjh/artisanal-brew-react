@@ -89,21 +89,21 @@ Suggest a grind adjustment for next brew. Return ONLY this JSON:
   }
 }
 
-export async function generateBrewRecipe(bean: Bean): Promise<BrewRecipe | null> {
-  const text = await callGemini(`You are a specialty coffee expert. Recommend optimal brew parameters for:
+export async function generateBrewRecipe(bean: Bean, method: string): Promise<BrewRecipe | null> {
+  const text = await callGemini(`You are a specialty coffee expert. Recommend optimal ${method} brew parameters for:
 - Bean: ${bean.name}
 - Origin: ${bean.origin}, Process: ${bean.process || 'unknown'}
 - Roast: ${bean.roastLevel || 'Medium'}
 - Tasting notes: ${bean.notes || 'none'}
 
-Return ONLY this JSON (method must be exactly one of: V60, Chemex, AeroPress, French Press):
+The brewer has chosen ${method}. Return ONLY this JSON (method field must be exactly "${method}"):
 {
-  "method": "V60",
+  "method": "${method}",
   "dose": 18.5,
   "water": 300,
   "temp": 93,
   "grindSize": "24 clicks (Comandante)",
-  "reasoning": "one sentence explaining why these parameters suit this bean"
+  "reasoning": "one sentence explaining why these parameters suit this bean with ${method}"
 }`)
   return parseJSON<BrewRecipe>(text)
 }
