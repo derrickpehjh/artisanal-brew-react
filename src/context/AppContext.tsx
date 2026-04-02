@@ -6,7 +6,7 @@ import {
   saveBrew as _saveBrew, resetAllData as _resetAllData, migrateExtractionValues as _migrateExtractionValues,
   getPendingBrew, setPendingBrew, clearPendingBrew,
   getActiveBeanId, clearLocalSnapshot,
-  formatDate, formatRatio, formatTime, buildChartPath, getTip, getPhases,
+  formatDate, formatRatio, formatTime, getTip, getPhases,
 } from '../lib/appData'
 import type { User } from '@supabase/supabase-js'
 import type { Bean } from '../types/bean'
@@ -150,7 +150,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addBean, updateBean, deleteBean, saveBrew, resetAllData, migrateExtractionValues, signOut,
     getActiveBean, setActiveBeanId, getBestBrews,
     getPendingBrew, setPendingBrew, clearPendingBrew,
-    formatDate, formatRatio, formatTime, buildChartPath, getTip, getPhases,
+    formatDate, formatRatio, formatTime, getTip, getPhases,
     isSupabaseConfigured,
     supabase,
   }

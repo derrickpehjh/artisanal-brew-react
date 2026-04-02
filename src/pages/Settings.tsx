@@ -2,22 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
 import ConfirmModal from '../components/ui/ConfirmModal'
-
-const PREFS_KEY = 'artisanal_brew_prefs'
-
-interface BrewPrefs {
-  dose: number
-  water: number
-  temp: number
-  grindSize: string
-  method: string
-}
-
-const PREFS_DEFAULTS: BrewPrefs = { dose: 18.5, water: 310, temp: 94, grindSize: '24 clicks (Comandante)', method: 'V60' }
-
-function loadPrefs(): BrewPrefs {
-  try { return { ...PREFS_DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') as Partial<BrewPrefs> } } catch { return { ...PREFS_DEFAULTS } }
-}
+import { type BrewPrefs, BREW_PREFS_KEY, loadBrewPrefs } from '../lib/brewUtils'
 
 export default function Settings() {
   const { user, beans, brews, stats, signOut, resetAllData, migrateExtractionValues, supabase } = useApp()
@@ -27,11 +12,11 @@ export default function Settings() {
   const [resetDone, setResetDone] = useState(false)
   const [migrating, setMigrating] = useState(false)
   const [migrateResult, setMigrateResult] = useState<string | null>(null)
-  const [prefs, setPrefs] = useState<BrewPrefs>(loadPrefs)
+  const [prefs, setPrefs] = useState<BrewPrefs>(loadBrewPrefs)
   const [prefsSaved, setPrefsSaved] = useState(false)
 
   async function savePrefs() {
-    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
+    localStorage.setItem(BREW_PREFS_KEY, JSON.stringify(prefs))
     if (supabase && user && !user.is_anonymous) {
       try { await supabase.auth.updateUser({ data: { brew_prefs: prefs } }) } catch {}
     }
@@ -47,10 +32,12 @@ export default function Settings() {
   function exportData() {
     const data = { brews, beans }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
+    a.href = url
     a.download = 'artisanal-brew-export.json'
     a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 60000)
   }
 
   async function handleMigrateExtraction() {
@@ -92,6 +79,7 @@ export default function Settings() {
   ]
 
   return (
+    <>
     <Layout>
       <div className="max-w-3xl mx-auto px-4 py-6 md:px-10 md:py-10 space-y-8 md:space-y-10">
         <section className="space-y-1">
@@ -273,5 +261,6 @@ export default function Settings() {
         onConfirm={() => setResetDone(false)}
       />
     )}
+    </>
   )
 }

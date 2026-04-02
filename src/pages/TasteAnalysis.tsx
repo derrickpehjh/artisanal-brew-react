@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
 import { suggestGrindAdjustment, getBrewAnalysis } from '../lib/aiBrewAssist'
 import ConfirmModal from '../components/ui/ConfirmModal'
+import { withTimeout } from '../lib/brewUtils'
 import RatingPanel from '../components/taste/RatingPanel'
 import TasteTagPanel from '../components/taste/TasteTagPanel'
 import AISommelierCard from '../components/taste/AISommelierCard'
@@ -13,16 +14,6 @@ import type { BrewAnalysis, GrindSuggestion } from '../types/ai'
 const DEFAULT_TAGS = ['Balanced', 'Juicy', 'Bright', 'Syrupy', 'Floral', 'Earthy', 'Nutty', 'Chocolate', 'Citrus', 'Caramel']
 
 const SAVE_TIMEOUT_MS = 15000
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
-  let timer: ReturnType<typeof setTimeout>
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => {
-      timer = setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
-    }),
-  ]).finally(() => clearTimeout(timer))
-}
 
 export default function TasteAnalysis() {
   const { beans, getPendingBrew, setPendingBrew, clearPendingBrew, saveBrew, getActiveBean, formatRatio } = useApp()
@@ -181,6 +172,7 @@ export default function TasteAnalysis() {
   ] : [['Method', '—'], ['Ratio', '—'], ['Grind', '—'], ['TDS Est.', '—']]
 
   return (
+    <>
     <Layout>
       <div className="max-w-[1440px] mx-auto px-4 py-6 md:px-10 md:py-10 space-y-10 md:space-y-12">
         <header className="space-y-3">
@@ -322,5 +314,6 @@ export default function TasteAnalysis() {
         Brew log copied to clipboard
       </div>
     )}
+    </>
   )
 }

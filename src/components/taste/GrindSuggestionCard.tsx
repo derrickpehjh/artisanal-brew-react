@@ -18,9 +18,9 @@ export default function GrindSuggestionCard({ loadingSuggestion, grindSuggestion
   if (!grindSuggestion) return null
 
   const directionIcon =
-    grindSuggestion.direction === 'finer' ? 'arrow_upward'
-    : grindSuggestion.direction === 'coarser' ? 'arrow_downward'
-    : 'check'
+    grindSuggestion.direction === 'finer' ? 'arrow_downward'
+    : grindSuggestion.direction === 'coarser' ? 'arrow_upward'
+    : 'check_circle'
   const directionColor =
     grindSuggestion.direction === 'finer' ? 'text-tertiary'
     : grindSuggestion.direction === 'coarser' ? 'text-amber-700'

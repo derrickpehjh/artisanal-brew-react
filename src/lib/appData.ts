@@ -354,7 +354,7 @@ const EXTRACTION_MIN = 18
 const EXTRACTION_MAX = 22
 
 export function getStats(_beans: Bean[], brews: Brew[]): BrewStats {
-  const empty = { avgRating: 0, totalBrews: 0, consistencyPct: 0, weeklyVolumeLiters: 0, weeklyYields: Array(7).fill(0), trendPct: 0, avgExtraction: null, extractionInRange: 0 }
+  const empty = { avgRating: 0, totalBrews: 0, consistencyPct: 0, weeklyVolumeLiters: 0, trendPct: 0, avgExtraction: null, extractionInRange: 0 }
   if (!brews.length) return empty
   const sorted = [...brews].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   const avg = brews.reduce((s, b) => s + b.rating, 0) / brews.length
@@ -379,19 +379,12 @@ export function getStats(_beans: Bean[], brews: Brew[]): BrewStats {
     ? extractionInRange
     : last7.length ? Math.round((last7.filter(b => b.rating >= 3).length / last7.length) * 100) : 0
 
-  const yields: number[] = []
-  for (let i = 6; i >= 0; i--) {
-    const ago = new Date(Date.now() - i * 86400000).toDateString()
-    const day = brews.filter(b => new Date(b.date).toDateString() === ago)
-    yields.push(day.length ? Math.min(100, day.reduce((s, b) => s + b.rating, 0) / day.length * 20) : 0)
-  }
-
   // trendPct: compare avg rating this week vs previous week (not brew count)
   const weeklyAvg = weekly.length ? weekly.reduce((s, b) => s + b.rating, 0) / weekly.length : 0
   const prevAvg = prevWeekly.length ? prevWeekly.reduce((s, b) => s + b.rating, 0) / prevWeekly.length : 0
   const trendPct = prevAvg > 0 ? Math.round(((weeklyAvg - prevAvg) / prevAvg) * 100) : 0
 
-  return { avgRating: Number(avg.toFixed(1)), totalBrews: brews.length, consistencyPct, weeklyVolumeLiters: Number(vol.toFixed(1)), weeklyYields: yields, trendPct, avgExtraction, extractionInRange }
+  return { avgRating: Number(avg.toFixed(1)), totalBrews: brews.length, consistencyPct, weeklyVolumeLiters: Number(vol.toFixed(1)), trendPct, avgExtraction, extractionInRange }
 }
 
 // Utilities
@@ -409,29 +402,6 @@ export function formatRatio(dose: number, water: number): string {
 }
 export function formatTime(secs: number): string {
   return `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(secs % 60).padStart(2, '0')}`
-}
-
-export function buildChartPath(brews: Brew[], days = 30, svgW = 480, svgH = 180): { rating: string; extraction: string } {
-  if (!brews.length) return { rating: '', extraction: '' }
-  const cutoff = Date.now() - days * 86400000
-  const pts = [...brews].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).filter(b => new Date(b.date).getTime() > cutoff)
-  if (pts.length < 2) return { rating: '', extraction: '' }
-  const ts = pts.map(b => new Date(b.date).getTime())
-  const minT = ts[0], maxT = ts[ts.length - 1], rangeT = maxT - minT || 1
-  const mapX = (t: number) => (((t - minT) / rangeT) * (svgW - 40)) + 20
-  const mapY = (v: number, min: number, max: number) => svgH - 10 - (((v - min) / (max - min || 1)) * (svgH - 20))
-  const rPoints = pts.map(b => [mapX(new Date(b.date).getTime()), mapY(b.rating, 1, 5)])
-  const ePoints = pts.filter(b => b.extraction).map(b => [mapX(new Date(b.date).getTime()), mapY(b.extraction!, 15, 25)])
-  function smooth(ps: number[][]): string {
-    if (!ps.length) return ''
-    let d = `M${ps[0][0].toFixed(1)},${ps[0][1].toFixed(1)}`
-    for (let i = 1; i < ps.length; i++) {
-      const cp = (ps[i - 1][0] + ps[i][0]) / 2
-      d += ` C${cp.toFixed(1)},${ps[i - 1][1].toFixed(1)} ${cp.toFixed(1)},${ps[i][1].toFixed(1)} ${ps[i][0].toFixed(1)},${ps[i][1].toFixed(1)}`
-    }
-    return d
-  }
-  return { rating: smooth(rPoints), extraction: smooth(ePoints) }
 }
 
 export const PHASES: PhasesMap = {

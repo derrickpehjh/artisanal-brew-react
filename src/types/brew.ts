@@ -41,7 +41,6 @@ export interface BrewStats {
   totalBrews: number
   consistencyPct: number
   weeklyVolumeLiters: number
-  weeklyYields: number[]
   trendPct: number
   avgExtraction: number | null
   extractionInRange: number

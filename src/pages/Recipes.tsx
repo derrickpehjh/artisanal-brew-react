@@ -3,21 +3,14 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
 import Stars from '../components/ui/Stars'
-import { PHASES } from '../lib/appData'
-import type { BrewPhase, Brew } from '../types/brew'
+import type { Brew } from '../types/brew'
+import { phasesDuration } from '../lib/brewUtils'
 
 const METHOD_BADGE: Record<string, string> = {
   'V60': 'bg-primary text-white',
   'Chemex': 'bg-tertiary-container text-on-tertiary-container',
   'AeroPress': 'bg-surface-container-highest text-on-surface',
   'French Press': 'bg-surface-container text-on-surface-variant',
-}
-
-function phasesDuration(method: string): string {
-  const phases: BrewPhase[] = (PHASES as Record<string, BrewPhase[]>)[method] || (PHASES as Record<string, BrewPhase[]>)['V60']
-  const secs = phases.reduce((s, p) => s + p.duration, 0)
-  const m = Math.floor(secs / 60), s = secs % 60
-  return `${m}:${String(s).padStart(2, '0')}`
 }
 
 const IMAGES = [
