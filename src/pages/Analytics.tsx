@@ -5,11 +5,11 @@ import Layout from '../components/Layout'
 import Stars from '../components/ui/Stars'
 import type { Brew } from '../types/brew'
 
-const UNSPLASH = [
-  'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&q=80',
-  'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=600&q=80',
-  'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&q=80',
-  'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=600&q=80',
+// Gradient backgrounds for best-brew cards — one per slot, no external dependencies
+const CARD_GRADIENTS = [
+  'linear-gradient(135deg, #3e2723 0%, #6d4c41 100%)',
+  'linear-gradient(135deg, #271310 0%, #4e342e 60%, #8d6e63 100%)',
+  'linear-gradient(135deg, #1b5e20 0%, #2e7d32 50%, #4e342e 100%)',
 ]
 
 // Color badge per brew method — uses only existing theme tokens
@@ -281,9 +281,11 @@ export default function Analytics() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                   {bestBrews.map((b, i) => (
                     <div key={b.id} className="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(62,39,35,0.04)] hover:shadow-lg transition-all flex flex-col">
-                      <div className="h-36 overflow-hidden relative">
-                        <img src={UNSPLASH[i % UNSPLASH.length]} alt={b.beanName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>
-                        <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent"></div>
+                      <div className="h-36 overflow-hidden relative" style={{ background: CARD_GRADIENTS[i % CARD_GRADIENTS.length] }}>
+                        <div className="absolute inset-0 flex items-center justify-center opacity-10">
+                          <span className="material-symbols-outlined text-white" style={{ fontSize: '72px', fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 48" }}>coffee</span>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
                         <div className="absolute bottom-2 left-3 right-3 flex justify-between items-end">
                           <span className={`text-[8px] font-bold px-2 py-0.5 rounded uppercase tracking-wide ${METHOD_BADGE[b.method] || 'bg-surface-container text-on-surface-variant'}`}>{b.method}</span>
                           {b.extraction != null && b.extraction > 0 && (

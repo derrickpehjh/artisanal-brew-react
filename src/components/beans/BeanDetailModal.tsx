@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { Bean } from '../../types/bean'
 import type { Brew } from '../../types/brew'
 import type { FreshnessResult } from '../../types/ai'
@@ -26,6 +27,36 @@ export default function BeanDetailModal({
   isActiveBean, deleting, formatDate,
   onClose, onSetActive, onBrew, onEdit, onDelete, onRetryTips,
 }: BeanDetailModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null)
+
+  // Scroll lock
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+
+  // Escape key + focus trap
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { onClose(); return }
+      if (e.key !== 'Tab') return
+      const focusable = modalRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+      if (!focusable?.length) return
+      const first = focusable[0], last = focusable[focusable.length - 1]
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus() }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    modalRef.current?.focus()
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+
   const detailPct = bean.totalGrams ? Math.round((bean.remainingGrams / bean.totalGrams) * 100) : 0
   const beanBrews = brews.filter(br =>
     br.beanId === bean.id ||
@@ -35,7 +66,12 @@ export default function BeanDetailModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-on-background/50 backdrop-blur-sm"></div>
-      <div className="relative bg-surface-container-lowest rounded-2xl w-full max-w-2xl mx-4 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+      <div
+        ref={modalRef}
+        tabIndex={-1}
+        className="relative bg-surface-container-lowest rounded-2xl w-full max-w-2xl mx-4 shadow-2xl overflow-hidden outline-none"
+        onClick={e => e.stopPropagation()}
+      >
         <div className="brew-gradient px-8 pt-8 pb-6">
           <div className="flex items-start justify-between">
             <div>
