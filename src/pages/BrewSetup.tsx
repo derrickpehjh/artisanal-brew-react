@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
 import { generateBrewRecipe } from '../lib/aiBrewAssist'
-import { phasesDuration, loadBrewPrefs, type BrewPrefs } from '../lib/brewUtils'
+import { phasesDuration, loadBrewPrefs, parseBrewTime, type BrewPrefs } from '../lib/brewUtils'
 
 const METHODS = [
   { id: 'V60', pattern: 'Bloom + 35s degas + 2 pours + draw down' },
@@ -13,7 +13,7 @@ const METHODS = [
 ]
 
 export default function BrewSetup() {
-  const { beans, brews, getActiveBean, setActiveBeanId, setPendingBrew, getPendingBrew, clearPendingBrew, formatDate, formatRatio, getTip } = useApp()
+  const { beans, brews, getActiveBean, setActiveBeanId, setPendingBrew, getPendingBrew, clearPendingBrew, formatDate, formatRatio, formatTime, getTip } = useApp()
   const navigate = useNavigate()
 
   const pending = getPendingBrew()
@@ -220,13 +220,63 @@ export default function BrewSetup() {
                 <p className="text-[10px] font-bold text-on-primary-container uppercase tracking-widest">Recipe Summary</p>
                 <div className="space-y-4">
                   <div>
-                    <p className="text-[10px] opacity-60 uppercase tracking-wide mb-1">Total Brew Time</p>
-                    <input
-                      value={brewTime}
-                      onChange={e => setBrewTime(e.target.value)}
-                      className="font-headline text-xl bg-transparent border-none focus:ring-0 text-white placeholder:text-white/40 w-full p-0 outline-none"
-                      placeholder="e.g. 3:30"
-                    />
+                    <p className="text-[10px] opacity-60 uppercase tracking-wide mb-3">Total Brew Time</p>
+                    {/* MM:SS stepper */}
+                    <div className="flex items-center gap-2">
+                      {/* Minutes */}
+                      <div className="flex flex-col items-center gap-1">
+                        <button
+                          onClick={() => setBrewTime(formatTime(Math.min(1800, parseBrewTime(brewTime) + 60)))}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                          aria-label="Add 1 minute"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">expand_less</span>
+                        </button>
+                        <span className="font-headline text-3xl font-bold w-10 text-center tabular-nums">
+                          {String(Math.floor(parseBrewTime(brewTime) / 60)).padStart(2, '0')}
+                        </span>
+                        <button
+                          onClick={() => setBrewTime(formatTime(Math.max(30, parseBrewTime(brewTime) - 60)))}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                          aria-label="Subtract 1 minute"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">expand_more</span>
+                        </button>
+                        <span className="text-[9px] opacity-50 uppercase tracking-widest font-bold">min</span>
+                      </div>
+                      <span className="font-headline text-3xl font-bold opacity-50 mb-5">:</span>
+                      {/* Seconds */}
+                      <div className="flex flex-col items-center gap-1">
+                        <button
+                          onClick={() => setBrewTime(formatTime(Math.min(1800, parseBrewTime(brewTime) + 5)))}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                          aria-label="Add 5 seconds"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">expand_less</span>
+                        </button>
+                        <span className="font-headline text-3xl font-bold w-10 text-center tabular-nums">
+                          {String(parseBrewTime(brewTime) % 60).padStart(2, '0')}
+                        </span>
+                        <button
+                          onClick={() => setBrewTime(formatTime(Math.max(30, parseBrewTime(brewTime) - 5)))}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                          aria-label="Subtract 5 seconds"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">expand_more</span>
+                        </button>
+                        <span className="text-[9px] opacity-50 uppercase tracking-widest font-bold">sec</span>
+                      </div>
+                    </div>
+                    {/* Reset to method default */}
+                    {brewTime !== phasesDuration(selectedMethod) && (
+                      <button
+                        onClick={() => setBrewTime(phasesDuration(selectedMethod))}
+                        className="mt-2 flex items-center gap-1 text-[9px] text-white/40 hover:text-white/70 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[12px]">refresh</span>
+                        Reset to default ({phasesDuration(selectedMethod)})
+                      </button>
+                    )}
                   </div>
                   <div>
                     <p className="text-[10px] opacity-60 uppercase tracking-wide mb-1">Grind Size</p>
