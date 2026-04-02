@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import ConfirmModal from '../components/ui/ConfirmModal'
 import Sidebar from '../components/Sidebar'
+import { parseBrewTime, scalePhasesToDuration } from '../lib/brewUtils'
 import type { BrewPhase } from '../types/brew'
 
 export default function GuidedBrew() {
@@ -10,7 +11,9 @@ export default function GuidedBrew() {
   const navigate = useNavigate()
   const brew = getPendingBrew()
 
-  const phases: BrewPhase[] = brew ? getPhases(brew.method ?? 'V60', brew.water) : []
+  const rawPhases: BrewPhase[] = brew ? getPhases(brew.method ?? 'V60', brew.water) : []
+  const configuredSecs = brew?.brewTime ? parseBrewTime(brew.brewTime) : 0
+  const phases: BrewPhase[] = configuredSecs > 0 ? scalePhasesToDuration(rawPhases, configuredSecs) : rawPhases
 
   const [currentPhase, setCurrentPhase] = useState(0)
   const [totalSecs, setTotalSecs] = useState(0)

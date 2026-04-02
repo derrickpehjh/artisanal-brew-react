@@ -96,13 +96,14 @@ export async function generateBrewRecipe(bean: Bean, method: string): Promise<Br
 - Roast: ${bean.roastLevel || 'Medium'}
 - Tasting notes: ${bean.notes || 'none'}
 
-The brewer has chosen ${method}. Return ONLY this JSON (method field must be exactly "${method}"):
+The brewer has chosen ${method}. Return ONLY this JSON (method field must be exactly "${method}", brewTime in MM:SS format):
 {
   "method": "${method}",
   "dose": 18.5,
   "water": 300,
   "temp": 93,
   "grindSize": "24 clicks (Comandante)",
+  "brewTime": "3:30",
   "reasoning": "one sentence explaining why these parameters suit this bean with ${method}"
 }`)
   return parseJSON<BrewRecipe>(text)

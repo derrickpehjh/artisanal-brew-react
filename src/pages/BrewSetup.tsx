@@ -26,6 +26,7 @@ export default function BrewSetup() {
   const [water, setWater] = useState(pending?.water || savedPrefs.water || 310)
   const [temp, setTemp] = useState(pending?.temp || savedPrefs.temp || 94)
   const [grind, setGrind] = useState(pending?.grindSize || savedPrefs.grindSize || '24 clicks (Comandante)')
+  const [brewTime, setBrewTime] = useState(pending?.brewTime || phasesDuration(pending?.method || savedPrefs.method || 'V60'))
   const [showBeanPicker, setShowBeanPicker] = useState(false)
   const [showTip, setShowTip] = useState(false)
   const [generatingRecipe, setGeneratingRecipe] = useState(false)
@@ -38,6 +39,11 @@ export default function BrewSetup() {
   useEffect(() => {
     if (!pending && activeBean?.id) setSelectedBeanId(activeBean.id)
   }, [activeBean, pending])
+
+  // Reset brew time to method default whenever method changes
+  useEffect(() => {
+    setBrewTime(phasesDuration(selectedMethod))
+  }, [selectedMethod])
 
   const selectedBean = beans.find(b => b.id === selectedBeanId) || activeBean
   const ratio = formatRatio(dose, water)
@@ -64,6 +70,7 @@ export default function BrewSetup() {
         if (recipe.water) setWater(recipe.water)
         if (recipe.temp) setTemp(recipe.temp)
         if (recipe.grindSize) setGrind(recipe.grindSize)
+        if (recipe.brewTime) setBrewTime(recipe.brewTime)
         if (recipe.reasoning) setRecipeNote(recipe.reasoning)
       }
     } catch {
@@ -88,7 +95,7 @@ export default function BrewSetup() {
       dose, water, temp,
       ratio: formatRatio(dose, water),
       grindSize: grind,
-      brewTime: phasesDuration(selectedMethod),
+      brewTime: brewTime || phasesDuration(selectedMethod),
       extraction: Number(((water / dose) * 1.2).toFixed(1)),
     })
     navigate('/guided-brew')
@@ -214,7 +221,12 @@ export default function BrewSetup() {
                 <div className="space-y-4">
                   <div>
                     <p className="text-[10px] opacity-60 uppercase tracking-wide mb-1">Total Brew Time</p>
-                    <p className="font-headline text-xl">{phasesDuration(selectedMethod)}</p>
+                    <input
+                      value={brewTime}
+                      onChange={e => setBrewTime(e.target.value)}
+                      className="font-headline text-xl bg-transparent border-none focus:ring-0 text-white placeholder:text-white/40 w-full p-0 outline-none"
+                      placeholder="e.g. 3:30"
+                    />
                   </div>
                   <div>
                     <p className="text-[10px] opacity-60 uppercase tracking-wide mb-1">Grind Size</p>
