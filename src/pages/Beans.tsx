@@ -94,16 +94,29 @@ export default function Beans() {
     if (f && f.status !== 'peak' && f.status !== 'future') fetchFreshnessTips(bean, f)
   }, [detailBeanId, beans])
 
+  const brewsByBeanId = useMemo(() => {
+    const map = new Map<string, typeof brews>()
+    for (const br of brews) {
+      const key = br.beanId && br.beanId !== 'undefined' ? br.beanId : `name:${br.beanName?.toLowerCase()}`
+      const arr = map.get(key) ?? []
+      arr.push(br)
+      map.set(key, arr)
+    }
+    return map
+  }, [brews])
+
   const filteredBeans = useMemo(() => {
     let result = [...beans]
     if (search) result = result.filter(b => b.name.toLowerCase().includes(search.toLowerCase()) || b.origin.toLowerCase().includes(search.toLowerCase()))
     if (filter === 'low') result = result.filter(b => b.remainingGrams / b.totalGrams <= 0.3)
     if (filter === 'fav') result = result.filter(b => {
-      const bBrws = brews.filter(br => br.beanId === b.id || ((!br.beanId || br.beanId === 'undefined') && br.beanName?.toLowerCase() === b.name?.toLowerCase()))
+      const byId = brewsByBeanId.get(b.id) ?? []
+      const byName = brewsByBeanId.get(`name:${b.name?.toLowerCase()}`) ?? []
+      const bBrws = byId.length ? byId : byName
       return bBrws.length > 0 && (bBrws.reduce((s, bw) => s + bw.rating, 0) / bBrws.length) >= 4
     })
     return result.sort((a, b) => (b.id === activeBean?.id ? 1 : 0) - (a.id === activeBean?.id ? 1 : 0))
-  }, [beans, brews, search, filter, activeBean])
+  }, [beans, brewsByBeanId, search, filter, activeBean])
 
   const totalStock = beans.reduce((s, b) => s + b.remainingGrams, 0)
   const lowCount = beans.filter(b => b.remainingGrams / b.totalGrams <= 0.2).length
@@ -151,10 +164,19 @@ export default function Beans() {
   }
 
   function removeImage(idx: number) {
-    setScanImages(prev => prev.filter((_, i) => i !== idx))
+    setScanImages(prev => {
+      URL.revokeObjectURL(prev[idx].preview)
+      return prev.filter((_, i) => i !== idx)
+    })
     setScanError(null)
     setAiFilledFields(new Set())
   }
+
+  const scanImagesRef = useRef(scanImages)
+  useEffect(() => { scanImagesRef.current = scanImages }, [scanImages])
+  useEffect(() => {
+    return () => { scanImagesRef.current.forEach(img => URL.revokeObjectURL(img.preview)) }
+  }, [])
 
   async function handleAIScan() {
     if (!scanImages.length) return

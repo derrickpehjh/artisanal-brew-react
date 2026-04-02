@@ -1,15 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import Sidebar from './Sidebar'
 
-interface NavLink {
-  to: string
-  icon: string
-  label: string
-  fill: boolean
-}
-
-const NAV_LINKS: NavLink[] = [
+const NAV_LINKS = [
   { to: '/', icon: 'home', label: 'Home', fill: true },
   { to: '/brew-setup', icon: 'coffee_maker', label: 'Log Brew', fill: true },
   { to: '/beans', icon: 'grain', label: 'Beans', fill: false },
@@ -53,50 +47,15 @@ export default function Layout({ children, searchPlaceholder = 'Search archives.
     try {
       await signOut()
       navigate('/login', { replace: true })
-    } catch (err) {
-      alert('Sign out failed: ' + ((err as Error)?.message || 'Unknown error'))
+    } catch {
+      // Sign out errors are non-fatal; auth state will reset on next load
     }
   }
 
   return (
     <div className="bg-background text-on-background min-h-screen">
       {/* Sidebar */}
-      <aside className="hidden md:flex h-screen w-64 fixed left-0 top-0 bg-surface-container-low flex-col py-8 gap-y-8 z-50">
-        <div className="px-6 flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-container rounded-full flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-surface-container-low text-xl" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>coffee</span>
-          </div>
-          <div>
-            <h1 className="font-headline text-lg leading-tight tracking-tight text-primary">The Artisanal Brew</h1>
-            <p className="text-[9px] uppercase tracking-widest text-on-surface-variant font-bold mt-0.5">Modern Cellar Edition</p>
-          </div>
-        </div>
-        <nav className="flex-1 flex flex-col">
-          {NAV_LINKS.map(link => {
-            const active = isActive(link.to)
-            return (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`flex items-center gap-3 py-3 px-6 transition-colors ${active ? 'border-l-2 border-primary font-bold text-primary bg-surface-container-high/50' : 'text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-primary'}`}
-              >
-                <span className="material-symbols-outlined text-[20px]" style={active ? { fontVariationSettings: "'FILL' 1,'wght' 600,'GRAD' 0,'opsz' 24" } : {}}>{link.icon}</span>
-                <span className="text-sm">{link.label}</span>
-              </Link>
-            )
-          })}
-          <Link
-            to="/settings"
-            className={`mt-auto flex items-center gap-3 py-3 px-6 transition-colors ${isActive('/settings') ? 'border-l-2 border-primary font-bold text-primary bg-surface-container-high/50' : 'text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-primary'}`}
-          >
-            <span className="material-symbols-outlined text-[20px]" style={isActive('/settings') ? { fontVariationSettings: "'FILL' 1,'wght' 600,'GRAD' 0,'opsz' 24" } : {}}>settings</span>
-            <span className="text-sm">Settings</span>
-          </Link>
-        </nav>
-        <div className="px-6">
-          <Link to="/brew-setup" className="brew-gradient block w-full py-4 text-white rounded-md font-bold text-sm text-center tracking-wide shadow-lg hover:opacity-90 active:scale-[0.98] transition-all">New Brew</Link>
-        </div>
-      </aside>
+      <Sidebar />
 
       {/* Top Bar */}
       <header className="fixed top-0 right-0 left-0 md:left-64 h-16 z-40 bg-background/80 backdrop-blur-xl shadow-[0_12px_40px_rgba(62,39,35,0.08)]">
@@ -119,9 +78,9 @@ export default function Layout({ children, searchPlaceholder = 'Search archives.
             </div>
           )}
           <div className="flex items-center gap-4 md:gap-6 ml-auto">
-            <button onClick={() => alert('No new notifications.')} className="text-on-surface-variant hover:text-primary transition-colors">
+            <span className="text-on-surface-variant" aria-label="No new notifications">
               <span className="material-symbols-outlined">notifications</span>
-            </button>
+            </span>
             <div className="flex items-center gap-3 pl-6 border-l border-outline-variant/20">
               <div className="text-right hidden sm:block">
                 <p className="text-xs font-bold text-primary">{displayName}</p>

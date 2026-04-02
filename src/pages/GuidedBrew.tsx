@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import ConfirmModal from '../components/ui/ConfirmModal'
+import Sidebar from '../components/Sidebar'
 import type { BrewPhase } from '../types/brew'
 
 export default function GuidedBrew() {
@@ -121,32 +122,10 @@ export default function GuidedBrew() {
   const timeRemaining = Math.max(0, totalDuration - totalSecs)
 
   return (
+    <>
     <div className="bg-background text-on-background overflow-hidden">
       {/* Sidebar */}
-      <aside className="hidden md:flex h-screen w-64 fixed left-0 top-0 bg-surface-container-low flex-col py-8 gap-y-8 z-50">
-        <div className="px-8">
-          <h1 className="font-headline text-xl tracking-tight text-primary">The Artisanal Brew</h1>
-          <p className="text-[10px] tracking-widest uppercase text-on-surface-variant mt-1">Modern Cellar Edition</p>
-        </div>
-        <nav className="flex-1 flex flex-col">
-          {[
-            { to: '/', icon: 'home', label: 'Home' },
-            { to: '/brew-setup', icon: 'coffee_maker', label: 'Log Brew', active: true, fill: true },
-            { to: '/beans', icon: 'grain', label: 'Beans' },
-            { to: '/analytics', icon: 'insert_chart', label: 'Analytics' },
-            { to: '/recipes', icon: 'menu_book', label: 'Recipes' },
-          ].map(link => (
-            <Link key={link.to} to={link.to} className={`flex items-center gap-3 py-3 px-6 transition-colors ${link.active ? 'border-l-2 border-primary font-bold text-primary bg-surface-container-high/50' : 'text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-primary'}`}>
-              <span className="material-symbols-outlined text-[20px]" style={link.fill ? { fontVariationSettings: "'FILL' 1,'wght' 600,'GRAD' 0,'opsz' 24" } : {}}>{link.icon}</span>
-              <span className="text-sm">{link.label}</span>
-            </Link>
-          ))}
-          <Link to="/settings" className="mt-auto flex items-center gap-3 py-3 px-6 text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-primary transition-colors">
-            <span className="material-symbols-outlined text-[20px]">settings</span>
-            <span className="text-sm">Settings</span>
-          </Link>
-        </nav>
-      </aside>
+      <Sidebar showCta={false} />
 
       {/* Top Bar */}
       <header className="fixed top-0 right-0 left-0 md:left-64 h-16 z-40 glass-panel shadow-[0_12px_40px_rgba(62,39,35,0.08)]">
@@ -361,5 +340,6 @@ export default function GuidedBrew() {
         onConfirm={() => setShowParamsModal(false)}
       />
     )}
+    </>
   )
 }

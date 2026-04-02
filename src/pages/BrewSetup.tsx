@@ -3,27 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
 import { generateBrewRecipe } from '../lib/aiBrewAssist'
-import { PHASES } from '../lib/appData'
-import type { BrewPhase } from '../types/brew'
-
-interface BrewPrefs {
-  dose: number
-  water: number
-  temp: number
-  grindSize: string
-  method: string
-}
-
-function loadBrewPrefs(): BrewPrefs {
-  try { return JSON.parse(localStorage.getItem('artisanal_brew_prefs') || '{}') as BrewPrefs } catch { return {} as BrewPrefs }
-}
-
-function phasesDuration(method: string): string {
-  const phases: BrewPhase[] = (PHASES as Record<string, BrewPhase[]>)[method] || PHASES['V60']
-  const secs = phases.reduce((s, p) => s + p.duration, 0)
-  const m = Math.floor(secs / 60), s = secs % 60
-  return `${m}:${String(s).padStart(2, '0')}`
-}
+import { phasesDuration, loadBrewPrefs, type BrewPrefs } from '../lib/brewUtils'
 
 const METHODS = [
   { id: 'V60', pattern: 'Bloom + 35s degas + 2 pours + draw down' },

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
@@ -71,6 +71,8 @@ function buildChart(brews: Brew[]): ChartData {
   return { rPath: smooth(rPts), ePath: smooth(ePts), dots, xLabels }
 }
 
+const HISTORY_PAGE_SIZE = 20
+
 export default function Analytics() {
   const { brews, stats, setPendingBrew, setActiveBeanId, formatDate, formatRatio } = useApp()
   const navigate = useNavigate()
@@ -78,6 +80,7 @@ export default function Analytics() {
   const [timeFilter, setTimeFilter] = useState<'7d' | '30d' | 'all'>('all')
   const [methodFilter, setMethodFilter] = useState('all')
   const [sortBy, setSortBy] = useState<'date' | 'rating'>('date')
+  const [historyPage, setHistoryPage] = useState(1)
 
   const chartBrews = useMemo(() => {
     if (timeFilter === 'all') return brews
@@ -103,6 +106,11 @@ export default function Analytics() {
         : new Date(b.date).getTime() - new Date(a.date).getTime()
     )
   }, [brews, search, methodFilter, sortBy])
+
+  useEffect(() => { setHistoryPage(1) }, [search, methodFilter, sortBy])
+
+  const visibleHistory = filteredHistory.slice(0, historyPage * HISTORY_PAGE_SIZE)
+  const hasMore = visibleHistory.length < filteredHistory.length
 
   const bestBrews = useMemo(
     () => [...brews].sort((a, b) => b.rating - a.rating || new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 3),
@@ -357,7 +365,7 @@ export default function Analytics() {
                     <p className="text-xs text-on-surface-variant">Try a different filter or search term.</p>
                   </div>
                 ) : (
-                  filteredHistory.map(b => (
+                  visibleHistory.map(b => (
                     <div key={b.id} className="bg-surface-container-low rounded-xl p-4 hover:bg-surface-container-high transition-colors group cursor-default">
                       {/* Top row: method + date | stars + extraction */}
                       <div className="flex items-start justify-between gap-2 mb-2">
@@ -403,6 +411,14 @@ export default function Analytics() {
                       </div>
                     </div>
                   ))
+                )}
+                {hasMore && (
+                  <button
+                    onClick={() => setHistoryPage(p => p + 1)}
+                    className="w-full py-2.5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary bg-surface-container-high hover:bg-surface-container-highest rounded-xl transition-colors mt-1"
+                  >
+                    Load more ({filteredHistory.length - visibleHistory.length} remaining)
+                  </button>
                 )}
               </div>
             </div>

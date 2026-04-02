@@ -28,7 +28,6 @@ export interface AppContextValue {
   formatDate: (iso: string) => string
   formatRatio: (dose: number, water: number) => string
   formatTime: (secs: number) => string
-  buildChartPath: (brews: Brew[], days?: number, svgW?: number, svgH?: number) => { rating: string; extraction: string }
   getTip: () => string
   getPhases: (method: string, water?: number) => BrewPhase[]
 }
