@@ -11,7 +11,10 @@ export default function GuidedBrew() {
   const navigate = useNavigate()
   const brew = getPendingBrew()
 
-  const rawPhases: BrewPhase[] = brew ? getPhases(brew.method ?? 'V60', brew.water) : []
+  // Use custom phases from BrewSetup if provided, otherwise derive from method + water
+  const rawPhases: BrewPhase[] = brew
+    ? (brew.customPhases?.length ? brew.customPhases : getPhases(brew.method ?? 'V60', brew.water))
+    : []
   const configuredSecs = brew?.brewTime ? parseBrewTime(brew.brewTime) : 0
   const phases: BrewPhase[] = configuredSecs > 0 ? scalePhasesToDuration(rawPhases, configuredSecs) : rawPhases
 

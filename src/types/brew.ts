@@ -14,6 +14,7 @@ export interface Brew {
   notes: string
   date: string
   extraction?: number | null
+  customPhases?: BrewPhase[]
 }
 
 export interface BrewDbRow {
