@@ -41,29 +41,35 @@ export default function TasteAnalysis() {
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
   const [copiedToast, setCopiedToast] = useState(false)
   const analysisVersion = useRef(0)
+  const brewRef = useRef(brew)
+  brewRef.current = brew
+  const beanRef = useRef(bean)
+  beanRef.current = bean
 
   const runBrewAnalysis = useCallback((currentRating: number, currentTags: Set<string>) => {
+    const currentBrew = brewRef.current
+    const currentBean = beanRef.current
     const version = ++analysisVersion.current
     setLoadingAnalysis(true)
     getBrewAnalysis({
-      method: brew?.method || 'V60',
-      dose: brew?.dose || 18,
-      water: brew?.water || 300,
-      temp: brew?.temp || 94,
-      ratio: brew?.ratio,
-      grindSize: brew?.grindSize,
-      extraction: brew?.extraction,
+      method: currentBrew?.method || 'V60',
+      dose: currentBrew?.dose || 18,
+      water: currentBrew?.water || 300,
+      temp: currentBrew?.temp || 94,
+      ratio: currentBrew?.ratio,
+      grindSize: currentBrew?.grindSize,
+      extraction: currentBrew?.extraction,
       rating: currentRating,
       tasteTags: Array.from(currentTags),
-      beanName: brew?.beanName || bean?.name,
-      beanOrigin: bean?.origin,
-      beanProcess: bean?.process,
-      beanRoastLevel: bean?.roastLevel,
+      beanName: currentBrew?.beanName || currentBean?.name,
+      beanOrigin: currentBean?.origin,
+      beanProcess: currentBean?.process,
+      beanRoastLevel: currentBean?.roastLevel,
     })
       .then(result => { if (analysisVersion.current === version) setBrewAnalysis(result) })
       .catch(() => {})
       .finally(() => { if (analysisVersion.current === version) setLoadingAnalysis(false) })
-  }, [brew, bean])
+  }, [])
 
   useEffect(() => {
     const timer = setTimeout(() => runBrewAnalysis(rating, tags), 600)
