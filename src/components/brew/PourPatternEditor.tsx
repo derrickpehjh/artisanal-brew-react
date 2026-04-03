@@ -20,6 +20,17 @@ const PHASE_PRESETS: PhasePreset[] = [
   { name: 'Fill', icon: 'water_drop', hasWater: true, defaultDuration: 30, instruction: 'Add the remaining water in a steady stream.' },
 ]
 
+const PHASE_DESCRIPTIONS: Record<string, string> = {
+  'Bloom Pour':  'Pre-wet the grounds with a small amount of water (2–3× dose weight) to release trapped CO₂ before the main extraction.',
+  'Bloom Rest':  'Pause after blooming so CO₂ fully escapes. Rushing this causes channelling and uneven extraction.',
+  'Pour':        'Add water in steady spirals. Controls extraction pace — slower pours give more contact time.',
+  'Draw Down':   'Wait for water to drain through the bed. Drain speed is a grind-size indicator: fast = coarse, slow = fine.',
+  'Steep':       'Immersion phase — coffee sits in water. Longer steeps increase extraction yield for French Press and AeroPress.',
+  'Press':       'Apply even pressure to separate liquid from grounds. Too fast forces bitter fines through; stop at first hiss.',
+  'Stir':        'Quick agitation to break dry clumps and ensure every ground is wetted evenly before steeping.',
+  'Fill':        'Complete the water addition to the target weight. Keep walls clear of stray dry grounds.',
+}
+
 function getPreset(phase: BrewPhase): PhasePreset {
   return (
     PHASE_PRESETS.find(p => p.name === phase.name) ||
@@ -125,7 +136,7 @@ export default function PourPatternEditor({ phases: initial, totalWater, method,
             const increment = phase.targetWater > 0 ? phase.targetWater - prevWater : 0
 
             return (
-              <div key={i} className="bg-surface-container-low rounded-xl overflow-hidden">
+              <div key={i} className="bg-surface-container-low rounded-xl overflow-hidden" title={PHASE_DESCRIPTIONS[phase.name]}>
                 {/* Row summary */}
                 <div className="flex items-center gap-3 px-4 py-3">
                   <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10 shrink-0">
@@ -173,7 +184,7 @@ export default function PourPatternEditor({ phases: initial, totalWater, method,
                     {/* Phase type chips */}
                     <div>
                       <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Phase Type</p>
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1.5 mb-2">
                         {PHASE_PRESETS.map(p => (
                           <button
                             key={p.name}
@@ -192,6 +203,11 @@ export default function PourPatternEditor({ phases: initial, totalWater, method,
                           </button>
                         ))}
                       </div>
+                      {PHASE_DESCRIPTIONS[phase.name] && (
+                        <p className="text-[11px] text-on-surface-variant leading-relaxed bg-surface-container rounded-lg px-3 py-2">
+                          {PHASE_DESCRIPTIONS[phase.name]}
+                        </p>
+                      )}
                     </div>
 
                     {/* Duration + Water side by side */}
