@@ -283,23 +283,23 @@ export default function GuidedBrew() {
                 <circle cx="112" cy="112" r="104" fill="transparent" stroke="#e4e2de" strokeWidth="2"/>
                 <circle cx="112" cy="112" r="104" fill="transparent" stroke="#271310" strokeWidth="7" strokeLinecap="round" strokeDasharray="653.5" strokeDashoffset={arcOffset} className="transition-all duration-1000"/>
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="material-symbols-outlined text-primary mb-1" style={{ fontSize: '44px', fontVariationSettings: "'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 48" }}>{ph.icon}</span>
                 <p className="font-label font-bold text-base text-primary leading-tight">{ph.name}</p>
                 <p className="font-headline italic text-on-surface-variant text-sm">Phase {currentPhase + 1} of {phases.length}</p>
-                {phaseTip && (
-                  <button
-                    onClick={() => setShowPhaseInfo(v => !v)}
-                    className={`mt-1 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors ${showPhaseInfo ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'}`}
-                  >
-                    <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>info</span>
-                    Why?
-                  </button>
-                )}
               </div>
             </div>
             <div className="text-center space-y-4 max-w-xs">
               <h2 className="font-headline text-2xl font-bold text-primary leading-tight">{ph.instruction}</h2>
+              {phaseTip && (
+                <button
+                  onClick={() => setShowPhaseInfo(v => !v)}
+                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${showPhaseInfo ? 'bg-primary text-on-primary shadow-md' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'}`}
+                >
+                  <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>tips_and_updates</span>
+                  Why this phase?
+                </button>
+              )}
               {nextPh && (
                 <div className="pt-3">
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-tertiary-fixed rounded-full text-on-tertiary-fixed text-[11px] font-bold uppercase tracking-wider">
