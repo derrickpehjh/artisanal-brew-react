@@ -5,7 +5,7 @@ A specialty coffee brewing tracker. Log brews, manage your bean cellar, follow g
 ## Features
 
 - **Bean Cellar** — track your coffee beans with stock levels, roast details, and tasting notes. Upload photos of the bag and let AI auto-fill the details in any language.
-- **Guided Brew** — step-by-step brew timer with phase arc for V60, Chemex, AeroPress, and French Press.
+- **Guided Brew** — step-by-step brew timer with phase arc for V60, Chemex, AeroPress, and French Press. Research-based default pour patterns (Hoffmann-inspired V60, 5-phase AeroPress) with full per-brew customisation: add, remove, and edit any phase inline before entering guided mode.
 - **Taste Analysis** — rate your cup, tag flavour notes, and get AI sommelier suggestions with extraction analysis. Falls back to rule-based insights when the AI is unavailable.
 - **Analytics** — SVG chart of rating vs extraction over time, best brews gallery, brew history feed.
 - **Recipes** — replicate your best brews or try community classics with one click.

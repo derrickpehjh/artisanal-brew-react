@@ -47,9 +47,11 @@ artisanal-brew-react/
 │   │   ├── Layout.tsx          # Shared app shell: sidebar + top bar
 │   │   ├── ui/
 │   │   │   └── Stars.tsx       # Star rating display component
-│   │   └── beans/
-│   │       ├── BeanCard.tsx    # Bean cellar card with stock indicator
-│   │       └── BeanDetailModal.tsx  # Bean detail overlay with brew action
+│   │   ├── beans/
+│   │   │   ├── BeanCard.tsx    # Bean cellar card with stock indicator
+│   │   │   └── BeanDetailModal.tsx  # Bean detail overlay with brew action
+│   │   └── brew/
+│   │       └── PourPatternEditor.tsx  # Phase-by-phase pour pattern editor modal
 │   ├── context/
 │   │   └── AppContext.tsx      # Global React Context (auth, data, utilities)
 │   ├── lib/
@@ -69,7 +71,7 @@ artisanal-brew-react/
 │   │   └── Settings.tsx        # Export data, reset, preferences
 │   ├── types/
 │   │   ├── bean.ts             # Bean and BeanDbRow interfaces
-│   │   ├── brew.ts             # Brew, BrewDbRow, BrewStats, BrewPhase interfaces
+│   │   ├── brew.ts             # Brew (+ customPhases?), BrewDbRow, BrewStats, BrewPhase interfaces
 │   │   ├── context.ts          # AppContextValue interface
 │   │   └── ai.ts               # AI response types (FreshnessResult, etc.)
 │   ├── __tests__/
@@ -147,7 +149,7 @@ const { user, beans, brews, stats, addBean, saveBrew, getActiveBean } = useApp()
 - Data: `beans[]`, `brews[]`, `stats` (memoized via `useMemo` — only recalculates when beans/brews change)
 - CRUD: `addBean()`, `updateBean()`, `deleteBean()`, `saveBrew()`, `refresh()`, `resetAllData()`
 - Bean selection: `getActiveBean()`, `setActiveBeanId()` — backed by React state so switching beans re-renders instantly without a page reload or network call
-- Draft brew (localStorage): `getPendingBrew()`, `setPendingBrew()`, `clearPendingBrew()`
+- Draft brew (localStorage): `getPendingBrew()`, `setPendingBrew()`, `clearPendingBrew()` — carries optional `customPhases` from BrewSetup through to GuidedBrew
 - Utilities: `formatDate()`, `formatRatio()`, `formatTime()`, `buildChartPath()`, `getTip()`, `getPhases()`
 
 ### Data Layer (`/src/lib/appData.ts`)
@@ -215,6 +217,20 @@ The app estimates extraction yield using: `(water / dose) * 1.2`
 This produces values in the realistic 18–22% range for specialty coffee ratios without a refractometer. SCA target range is 18–22%. Values outside this range trigger guidance in the Dashboard Extraction Window and TasteAnalysis grind suggestion cards.
 
 Old brews saved with the broken formula `(dose / water) * 100 * 1.2` (values < 15%) can be repaired via **Settings → Fix Extraction Values**, which calls `migrateExtractionValues()`.
+
+### Pour Pattern System
+
+Default phases are defined in `PHASES` (`appData.ts`) and are research-based (Hoffmann-inspired V60 with 45s bloom rest; 5-phase AeroPress with bloom+stir). Each method's phases are scaled to the user's actual water amount via `getPhases(method, water)` and proportionally scaled to match the configured total brew time via `scalePhasesToDuration()` in `brewUtils.ts`.
+
+**Customisation flow:**
+1. `BrewSetup` calls `getPhases(method, water)` to derive the scaled default phases and renders them as phase pills in the Recipe Summary panel.
+2. Clicking **Edit** opens `PourPatternEditor` (`src/components/brew/PourPatternEditor.tsx`) — a bottom-sheet modal where each phase can be renamed (type chip), have its duration (±5s stepper) and water target (±10g stepper) adjusted inline, and phases can be added from preset templates or removed.
+3. On save, custom phases are stored in React state (`customPhases`) in `BrewSetup`.
+4. On "Enter Guided Mode", `customPhases` is serialised into `pendingBrew` (localStorage) alongside the other brew parameters.
+5. `GuidedBrew` reads `brew.customPhases` first; falls back to `getPhases(method, water)` if not present. `scalePhasesToDuration` is always applied so the configured brew time is honoured regardless of whether phases are custom or default.
+6. Switching brew method in `BrewSetup` clears `customPhases`, reverting to the method default.
+
+When adding a new default phase template, add it to `PHASE_PRESETS` in `PourPatternEditor.tsx` (controls the type chip picker and Add Phase strip) and ensure `DEFAULT_INSTRUCTIONS` has a matching key.
 
 ---
 
@@ -308,12 +324,18 @@ Beans with `remainingGrams <= 0` are blocked from brewing at every entry point:
 
 Tests live in `src/__tests__/pages/` and use **Vitest** + **React Testing Library**.
 
+Current coverage: `Dashboard`, `Login`, `TasteAnalysis` (56 tests, all passing).
+
 Each test file:
 - Mocks `useApp()` via `vi.spyOn(AppContextModule, 'useApp')`
 - Uses a `makeContext()` helper returning a full `AppContextValue` with sensible defaults
 - Wraps renders in `<MemoryRouter>` for pages that use routing
 
 When adding a new field to `AppContextValue`, update the `makeContext()` helper in every test file.
+
+**Important patterns to follow when writing tests:**
+- The Login page renders auth errors inline via `setAuthError()` state — do NOT mock `window.alert`. Assert error text in the DOM with `screen.getByText(...)`.
+- The discard/exit flow in TasteAnalysis (and similar confirmation flows elsewhere) uses `<ConfirmModal>` — do NOT mock `window.confirm`. Click "Discard Session" to open the modal, then `fireEvent.click(screen.getByRole('button', { name: /^discard$/i }))` to confirm.
 
 ---
 
@@ -322,7 +344,7 @@ When adding a new field to `AppContextValue`, update the `makeContext()` helper 
 - **Bean switching** is instant — `activeBeanId` is React state in `AppContext`; `setActiveBeanId()` triggers a re-render with no page reload or network call.
 - **Stats** are memoized — `getStats()` only recalculates when `beans` or `brews` change.
 - **LocalStorage cache** is written once after a successful `loadData()`, not after every mutation. It is a fallback, not a primary store.
-- **Pending brew** (`artisanal_pending_brew`) must stay in localStorage — it survives navigation between BrewSetup → GuidedBrew → TasteAnalysis within a session.
+- **Pending brew** (`artisanal_pending_brew`) must stay in localStorage — it survives navigation between BrewSetup → GuidedBrew → TasteAnalysis within a session. It now optionally carries a `customPhases` array; GuidedBrew uses it directly if present.
 
 ---
 
