@@ -145,17 +145,16 @@ describe('TasteAnalysis page', () => {
   })
 
   it('shows discard confirmation prompt on discard click', () => {
-    const confirmMock = vi.spyOn(window, 'confirm').mockReturnValue(false)
     renderTasteAnalysis()
     fireEvent.click(screen.getByText(/discard session/i))
-    expect(confirmMock).toHaveBeenCalled()
-    confirmMock.mockRestore()
+    expect(screen.getByText(/discard this brew session/i)).toBeInTheDocument()
   })
 
   it('navigates away after discard confirmation', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
     renderTasteAnalysis()
     fireEvent.click(screen.getByText(/discard session/i))
+    // Click the "Discard" confirm button inside the ConfirmModal
+    fireEvent.click(screen.getByRole('button', { name: /^discard$/i }))
     expect(mockNavigate).toHaveBeenCalledWith('/')
   })
 

@@ -89,22 +89,18 @@ describe('Login page', () => {
   })
 
   it('shows error when clicking Google sign-in with no supabase', async () => {
-    const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {})
     renderLogin({ supabase: null, isSupabaseConfigured: false })
     fireEvent.click(screen.getByText(/continue with google/i))
     await waitFor(() => {
-      expect(alertMock).toHaveBeenCalledWith(expect.stringContaining('not configured'))
+      expect(screen.getByText(/supabase is not configured/i)).toBeInTheDocument()
     })
-    alertMock.mockRestore()
   })
 
   it('shows error when clicking demo with no supabase', async () => {
-    const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {})
     renderLogin({ supabase: null })
     fireEvent.click(screen.getByText(/continue in demo mode/i))
     await waitFor(() => {
-      expect(alertMock).toHaveBeenCalledWith(expect.stringContaining('not configured'))
+      expect(screen.getByText(/supabase is not configured/i)).toBeInTheDocument()
     })
-    alertMock.mockRestore()
   })
 })
