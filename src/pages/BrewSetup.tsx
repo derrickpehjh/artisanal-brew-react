@@ -404,10 +404,12 @@ export default function BrewSetup() {
           method={selectedMethod}
           onSave={(phases) => {
             setCustomPhases(phases)
+            setBrewTime(formatTime(phases.reduce((s, p) => s + p.duration, 0)))
             setShowPatternEditor(false)
           }}
           onReset={() => {
             setCustomPhases(null)
+            setBrewTime(phasesDuration(selectedMethod))
             setShowPatternEditor(false)
           }}
           onClose={() => setShowPatternEditor(false)}
