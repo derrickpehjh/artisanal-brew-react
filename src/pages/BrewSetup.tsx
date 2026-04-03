@@ -2,18 +2,20 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import Layout from '../components/Layout'
+import PourPatternEditor from '../components/brew/PourPatternEditor'
 import { generateBrewRecipe } from '../lib/aiBrewAssist'
-import { phasesDuration, loadBrewPrefs, parseBrewTime, type BrewPrefs } from '../lib/brewUtils'
+import { phasesDuration, loadBrewPrefs, parseBrewTime } from '../lib/brewUtils'
+import type { BrewPhase } from '../types/brew'
 
 const METHODS = [
-  { id: 'V60', pattern: 'Bloom + 35s degas + 2 pours + draw down' },
-  { id: 'Chemex', pattern: 'Bloom + 40s degas + 2 pours + draw down' },
-  { id: 'AeroPress', pattern: 'Full fill + 1min steep + 30s press' },
-  { id: 'French Press', pattern: 'Bloom + 30s degas + fill + 4min steep + press' },
+  { id: 'V60' },
+  { id: 'Chemex' },
+  { id: 'AeroPress' },
+  { id: 'French Press' },
 ]
 
 export default function BrewSetup() {
-  const { beans, brews, getActiveBean, setActiveBeanId, setPendingBrew, getPendingBrew, clearPendingBrew, formatDate, formatRatio, formatTime, getTip } = useApp()
+  const { beans, brews, getActiveBean, setActiveBeanId, setPendingBrew, getPendingBrew, clearPendingBrew, formatDate, formatRatio, formatTime, getTip, getPhases } = useApp()
   const navigate = useNavigate()
 
   const pending = getPendingBrew()
@@ -27,7 +29,9 @@ export default function BrewSetup() {
   const [temp, setTemp] = useState(pending?.temp || savedPrefs.temp || 94)
   const [grind, setGrind] = useState(pending?.grindSize || savedPrefs.grindSize || '24 clicks (Comandante)')
   const [brewTime, setBrewTime] = useState(pending?.brewTime || phasesDuration(pending?.method || savedPrefs.method || 'V60'))
+  const [customPhases, setCustomPhases] = useState<BrewPhase[] | null>(pending?.customPhases ?? null)
   const [showBeanPicker, setShowBeanPicker] = useState(false)
+  const [showPatternEditor, setShowPatternEditor] = useState(false)
   const [showTip, setShowTip] = useState(false)
   const [generatingRecipe, setGeneratingRecipe] = useState(false)
   const [recipeNote, setRecipeNote] = useState<string | null>(null)
@@ -40,9 +44,10 @@ export default function BrewSetup() {
     if (!pending && activeBean?.id) setSelectedBeanId(activeBean.id)
   }, [activeBean, pending])
 
-  // Reset brew time to method default whenever method changes
+  // Reset brew time and custom phases whenever method changes
   useEffect(() => {
     setBrewTime(phasesDuration(selectedMethod))
+    setCustomPhases(null)
   }, [selectedMethod])
 
   const selectedBean = beans.find(b => b.id === selectedBeanId) || activeBean
@@ -50,8 +55,9 @@ export default function BrewSetup() {
   const fillDose = Math.min((dose / 40) * 100, 100)
   const fillWater = Math.min((water / 600) * 100, 100)
   const fillTemp = Math.min(((temp - 60) / 40) * 100, 100)
-  const method = METHODS.find(m => m.id === selectedMethod) || METHODS[0]
   const estExtraction = (water / dose) * 1.2
+  // Phases to display in summary — use custom if set, otherwise default scaled to water
+  const displayPhases: BrewPhase[] = customPhases ?? getPhases(selectedMethod, water)
   const lastBrew = brews[0] || null
   const brewsLeft = selectedBean?.remainingGrams ? Math.floor(selectedBean.remainingGrams / dose) : 0
   const beanBrews = brews.filter(b => b.beanId === selectedBeanId)
@@ -95,6 +101,7 @@ export default function BrewSetup() {
       grindSize: grind,
       brewTime: brewTime || phasesDuration(selectedMethod),
       extraction: Number(((water / dose) * 1.2).toFixed(1)),
+      customPhases: customPhases ?? undefined,
     })
     navigate('/guided-brew')
   }
@@ -281,8 +288,36 @@ export default function BrewSetup() {
                     <input value={grind} onChange={e => setGrind(e.target.value)} className="font-headline text-xl bg-transparent border-none focus:ring-0 text-white placeholder:text-white/40 w-full p-0 outline-none" placeholder="e.g. 24 clicks" />
                   </div>
                   <div>
-                    <p className="text-[10px] opacity-60 uppercase tracking-wide mb-1">Pour Pattern</p>
-                    <p className="font-headline text-xl leading-snug">{method.pattern}</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] opacity-60 uppercase tracking-wide">Pour Pattern</p>
+                      <button
+                        onClick={() => setShowPatternEditor(true)}
+                        className="flex items-center gap-1 text-[9px] font-bold text-white/60 hover:text-white/90 transition-colors uppercase tracking-wider"
+                      >
+                        <span className="material-symbols-outlined text-[13px]">edit</span>
+                        {customPhases ? 'Custom' : 'Edit'}
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {displayPhases.map((phase, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-1 bg-white/10 rounded-full px-2 py-1"
+                        >
+                          <span
+                            className="material-symbols-outlined text-[11px] shrink-0"
+                            style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}
+                          >{phase.icon}</span>
+                          <span className="text-[10px] font-bold leading-none whitespace-nowrap">
+                            {phase.name.replace(' Pour', '').replace(' Rest', ' Rest').replace(' Down', ' Down')}
+                            {phase.targetWater > 0
+                              ? <span className="opacity-70 ml-0.5">·{phase.targetWater}g</span>
+                              : <span className="opacity-70 ml-0.5">·{phase.duration}s</span>
+                            }
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -359,6 +394,24 @@ export default function BrewSetup() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Pour Pattern Editor Modal */}
+      {showPatternEditor && (
+        <PourPatternEditor
+          phases={displayPhases}
+          totalWater={water}
+          method={selectedMethod}
+          onSave={(phases) => {
+            setCustomPhases(phases)
+            setShowPatternEditor(false)
+          }}
+          onReset={() => {
+            setCustomPhases(null)
+            setShowPatternEditor(false)
+          }}
+          onClose={() => setShowPatternEditor(false)}
+        />
       )}
 
       {/* Tip FAB */}
