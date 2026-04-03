@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import {
   loadData, setUser as setDataUser, getBeans, getBrews, getStats,
@@ -22,6 +22,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [initialized, setInitialized] = useState(false)
   const [activeBeanId, setActiveBeanIdState] = useState<string>(() => getActiveBeanId() || '')
+  const lastRefreshAt = useRef<number>(0)
 
   const refresh = useCallback(async (currentUser: User) => {
     if (!currentUser) return
@@ -29,6 +30,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await loadData(currentUser)
       setBeans([...getBeans()])
       setBrews(getBrews())
+      lastRefreshAt.current = Date.now()
     } catch (e) {
       console.error('Data load failed:', e)
     }
@@ -80,6 +82,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(safetyTimer)
     }
   }, [refresh])
+
+  // Re-fetch from Supabase whenever the tab becomes visible again (cross-device sync).
+  // Throttled to at most once every 30 seconds so rapid tab switches don't spam the DB.
+  useEffect(() => {
+    const COOLDOWN_MS = 30_000
+    function handleVisibility() {
+      if (document.visibilityState !== 'visible') return
+      const userRef = user  // capture current value
+      if (!userRef) return
+      if (Date.now() - lastRefreshAt.current < COOLDOWN_MS) return
+      refresh(userRef)
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [user, refresh])
 
   const addBean = useCallback(async (bean: Omit<Bean, 'id'> & { id?: string }) => {
     const added = await _addBean(bean)

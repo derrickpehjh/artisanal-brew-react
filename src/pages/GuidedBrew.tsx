@@ -6,6 +6,66 @@ import Sidebar from '../components/Sidebar'
 import { parseBrewTime, scalePhasesToDuration } from '../lib/brewUtils'
 import type { BrewPhase } from '../types/brew'
 
+// Extended tips shown in the phase info sheet
+const PHASE_TIPS: Record<string, { why: string; tip: string }> = {
+  'Bloom Pour': {
+    why: 'Fresh coffee releases trapped CO₂. Pre-wetting forces this gas out before the main extraction so water can flow evenly through the entire bed without channelling.',
+    tip: 'Use 2–3× the dose weight (e.g. 45–55g for 18g dose). Pour in a slow spiral from centre outward — every ground must be saturated.',
+  },
+  'Bloom & Stir': {
+    why: 'The AeroPress is forgiving, but a quick stir during the bloom ensures no dry pockets of coffee remain, giving you even saturation before the main steep.',
+    tip: 'Stir 3–5 times aggressively. You should see all the grounds darken and absorb water within the first 10 seconds.',
+  },
+  'Bloom Rest': {
+    why: 'Rushing past the degas phase introduces CO₂ bubbles into the extraction, which creates uneven flow paths and a thinner, less nuanced cup.',
+    tip: 'Watch the surface — vigorous bubbling means the beans are fresh (roasted within 2–3 weeks). Wait until activity slows before pouring.',
+  },
+  'First Pour': {
+    why: 'The first main pour builds extraction momentum. A steady, controlled pour maintains even saturation and avoids agitating the bed, which can cause channelling.',
+    tip: 'Keep the stream thin and low. Concentric circles from inside out — never break the surface with a heavy stream.',
+  },
+  'Second Pour': {
+    why: 'The second pour finishes the extraction and washes the remaining solubles through the bed uniformly.',
+    tip: 'Match your pour rate to your first pour. Maintain the same rhythm — consistency in rate matters more than speed.',
+  },
+  'Final Pour': {
+    why: 'A high pour on the Chemex increases turbulence in the final phase, which brightens the cup and improves clarity.',
+    tip: 'Raise the kettle slightly higher than usual for this pour to introduce gentle agitation without over-disturbing the bed.',
+  },
+  'Fill': {
+    why: 'Filling to the target weight completes the water addition. For immersion methods, the key is ensuring no dry grounds remain on the walls.',
+    tip: 'For French Press and AeroPress, give the sides a quick scrape with a spoon after filling to wash down any stray grounds.',
+  },
+  'Steep': {
+    why: 'Immersion steeping gives even, diffusion-based extraction — the longer the steep, the higher the extraction yield.',
+    tip: 'Do not stir. Breaking the crust during steeping accelerates extraction unevenly. Stay hands-off.',
+  },
+  'Draw Down': {
+    why: 'The draw down is where the last solubles drain through the bed. The speed of drain indicates grind size — too fast means coarse, too slow means fine.',
+    tip: 'A clean, flat coffee bed at the end (no craters) means the extraction was even. A dip in the centre suggests channelling.',
+  },
+  'Press': {
+    why: 'Pressing too hard extracts harsh, bitter compounds from the puck. Pressing too fast forces fines through the filter.',
+    tip: 'Apply about 500g of force — roughly the weight of a full water bottle on the plunger. Stop as soon as you hear the hiss.',
+  },
+  'Press & Pour': {
+    why: 'Leaving a plunged French Press sitting means the grounds continue to extract even after pressing, which adds bitterness over time.',
+    tip: 'Press and pour in one motion. Decant everything into a serving vessel immediately to stop extraction.',
+  },
+}
+
+function getPhaseTip(phase: BrewPhase): { why: string; tip: string } | null {
+  if (PHASE_TIPS[phase.name]) return PHASE_TIPS[phase.name]
+  // Fallback by icon type
+  if (phase.icon === 'hourglass_top' || phase.icon === 'hourglass_bottom')
+    return { why: 'Waiting allows the coffee to fully saturate and degas before the next pour.', tip: 'Keep the timer running and resist the urge to disturb the bed.' }
+  if (phase.icon === 'water_drop' && phase.targetWater > 0)
+    return { why: 'Controlled water addition is the foundation of even extraction.', tip: 'Pour in slow, deliberate concentric circles from the centre outward.' }
+  if (phase.icon === 'compress')
+    return { why: 'The press phase separates the liquid from the grounds.', tip: 'Apply slow, even pressure and stop before forcing the puck dry.' }
+  return null
+}
+
 export default function GuidedBrew() {
   const { getPendingBrew, setPendingBrew, getPhases, formatTime, signOut, user } = useApp()
   const navigate = useNavigate()
@@ -25,6 +85,7 @@ export default function GuidedBrew() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [showParamsModal, setShowParamsModal] = useState(false)
+  const [showPhaseInfo, setShowPhaseInfo] = useState(false)
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const totalSecsRef = useRef(0)
@@ -111,6 +172,7 @@ export default function GuidedBrew() {
 
   const ph = phases[currentPhase]
   const nextPh = phases[currentPhase + 1]
+  const phaseTip = getPhaseTip(ph)
   const phasePct = ph.duration > 0 ? Math.min((phaseSecs / ph.duration) * 100, 100) : 100
   const arcOffset = 653.5 * (1 - phasePct / 100)
 
@@ -221,10 +283,19 @@ export default function GuidedBrew() {
                 <circle cx="112" cy="112" r="104" fill="transparent" stroke="#e4e2de" strokeWidth="2"/>
                 <circle cx="112" cy="112" r="104" fill="transparent" stroke="#271310" strokeWidth="7" strokeLinecap="round" strokeDasharray="653.5" strokeDashoffset={arcOffset} className="transition-all duration-1000"/>
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
                 <span className="material-symbols-outlined text-primary mb-1" style={{ fontSize: '44px', fontVariationSettings: "'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 48" }}>{ph.icon}</span>
                 <p className="font-label font-bold text-base text-primary leading-tight">{ph.name}</p>
                 <p className="font-headline italic text-on-surface-variant text-sm">Phase {currentPhase + 1} of {phases.length}</p>
+                {phaseTip && (
+                  <button
+                    onClick={() => setShowPhaseInfo(v => !v)}
+                    className={`mt-1 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors ${showPhaseInfo ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'}`}
+                  >
+                    <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>info</span>
+                    Why?
+                  </button>
+                )}
               </div>
             </div>
             <div className="text-center space-y-4 max-w-xs">
@@ -320,6 +391,40 @@ export default function GuidedBrew() {
         </footer>
       </main>
     </div>
+
+    {showPhaseInfo && phaseTip && (
+      <div className="fixed inset-x-0 bottom-0 z-[150] md:bottom-28 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[420px]">
+        <div className="bg-surface-container-lowest rounded-t-2xl md:rounded-2xl shadow-2xl border border-outline-variant/15">
+          <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-outline-variant/10">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>{ph.icon}</span>
+              </div>
+              <div>
+                <p className="font-bold text-sm text-primary leading-tight">{ph.name}</p>
+                <p className="text-[10px] text-on-surface-variant">Phase guide</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowPhaseInfo(false)}
+              className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors"
+            >
+              <span className="material-symbols-outlined text-on-surface-variant text-[18px]">close</span>
+            </button>
+          </div>
+          <div className="px-5 py-4 space-y-4">
+            <div>
+              <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1.5">Why this phase</p>
+              <p className="text-sm text-on-surface leading-relaxed">{phaseTip.why}</p>
+            </div>
+            <div className="bg-surface-container-low rounded-xl px-4 py-3 flex gap-3">
+              <span className="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24" }}>tips_and_updates</span>
+              <p className="text-sm text-on-surface leading-relaxed">{phaseTip.tip}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
 
     {showExitConfirm && (
       <ConfirmModal
